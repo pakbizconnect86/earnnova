@@ -80,9 +80,9 @@
   @keyframes glacierFloat3{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(25px,-35px) scale(1.1);} }
 
   @keyframes glassFadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-  .card, .stat-card, .main-card, .task-card, .item, .hero-card, .bal-card,
-  .activity-item, .method, .plan, .cat-card, .step, .meta-card, .sub-card,
-  .ref-item, .menu-item, .task-details-card{
+  .card, .stat-card, .main-card, .task-card, .item, .hero-card, .bal-card, .balance-card,
+  .activity-item, .method, .plan, .cat-card, .step, .meta-card, .sub-card, .head-card,
+  .ref-item, .menu-item, .note, .confirm-box, .status-banner, .search-box, .task-details-card{
     backdrop-filter: blur(18px) saturate(150%);
     -webkit-backdrop-filter: blur(18px) saturate(150%);
     animation: glassFadeUp 0.55s cubic-bezier(.2,.7,.3,1) both;
@@ -96,11 +96,38 @@
     border-color: rgba(91,110,245,0.4);
     box-shadow: 0 8px 30px rgba(91,110,245,0.12);
   }
+
+  /* Glass shimmer sweep on the big hero-style panels */
+  .hero-card, .bal-card, .balance-card, .main-card.wide, .head-card{
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-card::before, .bal-card::before, .balance-card::before, .main-card.wide::before, .head-card::before{
+    content: '';
+    position: absolute;
+    top: 0; left: -60%;
+    width: 50%; height: 100%;
+    background: linear-gradient(115deg, transparent, rgba(255,255,255,0.16), transparent);
+    transform: skewX(-18deg);
+    animation: glassShimmer 5.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes glassShimmer{
+    0%{ left:-60%; }
+    45%{ left:130%; }
+    100%{ left:130%; }
+  }
+
+  header{
+    backdrop-filter: blur(20px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  }
+
   button, .btn-primary, .btn-approve, .nav-cta{
     transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
   }
   button:active, .btn-primary:active{ transform: scale(0.97); }
-
+  button:not(:disabled):hover, .btn-primary:hover{ filter: brightness(1.08); }
 </style>
 </head>
 <body>
