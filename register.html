@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Account — EarnNova</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --danger:#F26B6B;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+    background:radial-gradient(circle at 80% 0%, rgba(91,110,245,0.18), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif;
+  }
+  .card{width:100%; max-width:420px; background:var(--surface); border:1px solid var(--surface-border); border-radius:20px; padding:30px 26px;}
+  .brand{font-family:'Sora'; font-weight:700; font-size:20px; text-align:center;}
+  .brand span{color:var(--indigo-soft);}
+  h1{font-family:'Sora'; font-size:20px; font-weight:700; margin-top:20px; text-align:center;}
+  p.sub{color:var(--muted); font-size:13.5px; text-align:center; margin-top:6px;}
+  form{margin-top:24px; display:flex; flex-direction:column; gap:14px;}
+  label{font-size:13px; color:var(--muted); margin-bottom:6px; display:block;}
+  input{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--surface-border);
+    border-radius:12px; padding:12px 14px; color:var(--text); font-size:14.5px; outline:none;
+  }
+  input:focus{border-color:var(--indigo-soft);}
+  .hint{font-size:11.5px; color:var(--muted); margin-top:5px;}
+  button{
+    margin-top:6px; padding:13px; border:none; border-radius:13px; font-weight:600; font-size:14.5px;
+    background:linear-gradient(135deg, var(--indigo), #4756D8); color:#fff; cursor:pointer;
+  }
+  button:disabled{opacity:0.6;}
+  .error{color:var(--danger); font-size:13px; min-height:16px;}
+  .foot{text-align:center; font-size:13.5px; color:var(--muted); margin-top:20px;}
+  .foot a{color:var(--indigo-soft); text-decoration:none;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">Earn<span>Nova</span></div>
+    <h1>Create your account</h1>
+    <p class="sub">Join EarnNova and start with verified tasks.</p>
+    <form id="regForm">
+      <div><label for="fullName">Full name</label><input id="fullName" required placeholder="Your full name"></div>
+      <div><label for="email">Email</label><input id="email" type="email" required placeholder="you@example.com"></div>
+      <div><label for="phone">Phone number</label><input id="phone" type="tel" required placeholder="03XXXXXXXXX"></div>
+      <div><label for="password">Password</label><input id="password" type="password" required placeholder="At least 8 characters"><div class="hint">Use 8+ characters with a mix of letters and numbers.</div></div>
+      <div><label for="confirm">Confirm password</label><input id="confirm" type="password" required placeholder="Re-enter password"></div>
+      <div><label for="refCode">Referral code (optional)</label><input id="refCode" placeholder="EN-XXXXXX"></div>
+      <div class="error" id="errorMsg"></div>
+      <button type="submit" id="submitBtn">Create Account</button>
+    </form>
+    <div class="foot">Already have an account? <a href="login.html">Log in</a></div>
+  </div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  const form = document.getElementById('regForm');
+  const errorMsg = document.getElementById('errorMsg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function isStrongPassword(pw) {
+    return pw.length >= 8 && /[A-Za-z]/.test(pw) && /[0-9]/.test(pw);
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMsg.textContent = '';
+
+    const fullName = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm').value;
+    const refCode = document.getElementById('refCode').value.trim();
+
+    if (!isStrongPassword(password)) {
+      errorMsg.textContent = 'Password must be at least 8 characters and include letters and numbers.';
+      return;
+    }
+    if (password !== confirm) {
+      errorMsg.textContent = 'Passwords do not match.';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating account...';
+
+    try {
+      // Enforce unique phone number (unique email is already enforced by Firebase Auth)
+      const phoneCheck = await db.collection(COL.users).where('phone', '==', phone).limit(1).get();
+      if (!phoneCheck.empty) throw { code: 'phone-exists' };
+
+      // Validate referral code if provided
+      let referredBy = null;
+      if (refCode) {
+        const refCheck = await db.collection(COL.users).where('referralCode', '==', refCode).limit(1).get();
+        if (refCheck.empty) throw { code: 'invalid-ref' };
+        referredBy = refCheck.docs[0].id;
+      }
+
+      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      const uid = cred.user.uid;
+      const userId = generateUserId();
+      const referralCode = userId;
+      const now = firebase.firestore.FieldValue.serverTimestamp();
+
+      await db.collection(COL.users).doc(uid).set({
+        userId, fullName, email, phone,
+        role: 'user',
+        status: 'Active',
+        referralCode,
+        referredBy,
+        createdAt: now
+      });
+
+      await db.collection(COL.wallets).doc(uid).set({
+        availableBalance: 0,
+        pendingEarnings: 0,
+        withdrawalPending: 0,
+        totalEarned: 0,
+        totalWithdrawn: 0,
+        updatedAt: now
+      });
+
+      if (referredBy) {
+        await db.collection(COL.referrals).add({
+          referrerUid: referredBy,
+          referredUid: uid,
+          status: 'Registered',
+          createdAt: now
+        });
+      }
+
+      window.location.href = 'dashboard.html';
+
+    } catch (err) {
+      const map = {
+        'auth/email-already-in-use': 'This email is already registered.',
+        'auth/invalid-email': 'Please enter a valid email.',
+        'auth/weak-password': 'Password is too weak.',
+        'phone-exists': 'This phone number is already registered.',
+        'invalid-ref': 'Referral code not found.'
+      };
+      errorMsg.textContent = map[err.code] || 'Something went wrong. Please try again.';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Account';
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — EarnNova</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --danger:#F26B6B;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+    background:radial-gradient(circle at 20% 0%, rgba(91,110,245,0.18), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif;
+  }
+  .card{width:100%; max-width:400px; background:var(--surface); border:1px solid var(--surface-border); border-radius:20px; padding:30px 26px;}
+  .brand{font-family:'Sora'; font-weight:700; font-size:20px; text-align:center; margin-bottom:4px;}
+  .brand span{color:var(--indigo-soft);}
+  h1{font-family:'Sora'; font-size:20px; font-weight:700; margin-top:20px; text-align:center;}
+  p.sub{color:var(--muted); font-size:13.5px; text-align:center; margin-top:6px;}
+  form{margin-top:24px; display:flex; flex-direction:column; gap:14px;}
+  label{font-size:13px; color:var(--muted); margin-bottom:6px; display:block;}
+  input{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--surface-border);
+    border-radius:12px; padding:12px 14px; color:var(--text); font-size:14.5px; outline:none;
+  }
+  input:focus{border-color:var(--indigo-soft);}
+  .row{display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--muted);}
+  .row a{color:var(--indigo-soft); text-decoration:none;}
+  button{
+    margin-top:6px; padding:13px; border:none; border-radius:13px; font-weight:600; font-size:14.5px;
+    background:linear-gradient(135deg, var(--indigo), #4756D8); color:#fff; cursor:pointer;
+  }
+  button:disabled{opacity:0.6;}
+  .error{color:var(--danger); font-size:13px; min-height:16px;}
+  .foot{text-align:center; font-size:13.5px; color:var(--muted); margin-top:20px;}
+  .foot a{color:var(--indigo-soft); text-decoration:none;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">Earn<span>Nova</span></div>
+    <h1>Welcome back</h1>
+    <p class="sub">Log in to continue earning.</p>
+    <form id="loginForm">
+      <div>
+        <label for="identifier">Email or phone</label>
+        <input id="identifier" type="text" required placeholder="you@example.com">
+      </div>
+      <div>
+        <label for="password">Password</label>
+        <input id="password" type="password" required placeholder="••••••••">
+      </div>
+      <div class="row">
+        <label style="display:flex; align-items:center; gap:6px; margin:0;"><input type="checkbox" id="remember" style="width:auto;"> Remember me</label>
+        <a href="#" id="forgotLink">Forgot password?</a>
+      </div>
+      <div class="error" id="errorMsg"></div>
+      <button type="submit" id="submitBtn">Log In</button>
+    </form>
+    <div class="foot">New here? <a href="register.html">Create an account</a></div>
+  </div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  const form = document.getElementById('loginForm');
+  const errorMsg = document.getElementById('errorMsg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMsg.textContent = '';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Logging in...';
+
+    const identifier = document.getElementById('identifier').value.trim();
+    const password = document.getElementById('password').value;
+    const remember = document.getElementById('remember').checked;
+
+    try {
+      await auth.setPersistence(remember ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION);
+
+      let email = identifier;
+      // If identifier looks like a phone number, look up the matching email first
+      if (!identifier.includes('@')) {
+        const q = await db.collection(COL.users).where('phone', '==', identifier).limit(1).get();
+        if (q.empty) throw { code: 'not-found' };
+        email = q.docs[0].data().email;
+      }
+
+      const cred = await auth.signInWithEmailAndPassword(email, password);
+      const userDoc = await db.collection(COL.users).doc(cred.user.uid).get();
+      const role = userDoc.exists ? userDoc.data().role : 'user';
+      window.location.href = role === 'admin' ? 'admin/dashboard.html' : 'dashboard.html';
+
+    } catch (err) {
+      const map = {
+        'auth/wrong-password': 'Incorrect password.',
+        'auth/user-not-found': 'No account found with that email/phone.',
+        'not-found': 'No account found with that email/phone.',
+        'auth/too-many-requests': 'Too many attempts. Please try again later.',
+        'auth/invalid-email': 'Please enter a valid email.'
+      };
+      errorMsg.textContent = map[err.code] || 'Something went wrong. Please try again.';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Log In';
+    }
+  });
+
+  document.getElementById('forgotLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = prompt('Enter your account email to receive a reset link:');
+    if (!email) return;
+    try {
+      await auth.sendPasswordResetEmail(email);
+      alert('Password reset link sent. Please check your email.');
+    } catch (err) {
+      alert('Could not send reset link. Please check the email and try again.');
+    }
+  });
+</script>
+</body>
+</html>

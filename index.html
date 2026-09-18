@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EarnNova — Genuine Online Earning Opportunities in Pakistan</title>
+<meta name="description" content="Complete verified tasks, access useful digital services, and earn through legitimate opportunities. Manual deposits, manual withdrawals, real transaction ledger.">
+<meta property="og:title" content="EarnNova">
+<meta property="og:description" content="Earn Smart. Work Genuine. Grow Together.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F;
+    --bg-2:#0F1530;
+    --surface:rgba(255,255,255,0.045);
+    --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7;
+    --muted:#8D94B8;
+    --indigo:#5B6EF5;
+    --indigo-soft:#818CF8;
+    --teal:#22D3B8;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%),
+      radial-gradient(circle at 90% 20%, rgba(34,211,184,0.10), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:76px;
+  }
+  h1,h2,h3,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 20px;}
+
+  header{
+    position:sticky; top:0; z-index:50;
+    backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.72);
+    border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; max-width:1080px; margin:0 auto;}
+  .brand{font-weight:700; font-size:20px; letter-spacing:-0.02em;}
+  .brand span{color:var(--indigo-soft);}
+  .nav-links{display:none; gap:28px; font-size:14.5px; color:var(--muted);}
+  .nav-links a:hover{color:var(--text);}
+  .nav-cta{
+    background:linear-gradient(135deg, var(--indigo), #4756D8);
+    padding:9px 18px; border-radius:12px; font-size:14px; font-weight:600;
+    box-shadow:0 6px 20px rgba(91,110,245,0.35);
+  }
+  @media(min-width:760px){ .nav-links{display:flex;} }
+
+  .hero{padding:56px 0 40px;}
+  .hero h1{font-size:clamp(30px,7vw,46px); line-height:1.12; font-weight:800; letter-spacing:-0.02em;}
+  .hero p{color:var(--muted); font-size:16.5px; margin-top:16px; max-width:52ch; line-height:1.55;}
+  .hero-actions{display:flex; flex-wrap:wrap; gap:12px; margin-top:26px;}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--indigo), #4756D8);
+    padding:13px 24px; border-radius:13px; font-weight:600; font-size:15px;
+    box-shadow:0 10px 28px rgba(91,110,245,0.32);
+  }
+  .btn-ghost{
+    border:1px solid var(--surface-border); padding:13px 24px; border-radius:13px;
+    font-weight:600; font-size:15px; color:var(--text);
+  }
+
+  .preview-cards{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:36px;}
+  .stat-card{
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius);
+    padding:18px;
+  }
+  .stat-card .label{color:var(--muted); font-size:13px;}
+  .stat-card .value{font-family:'Sora'; font-size:22px; font-weight:700; margin-top:6px;}
+  .stat-card.up .value{color:var(--teal);}
+
+  section{padding:44px 0;}
+  .section-head{margin-bottom:26px;}
+  .section-head h2{font-size:24px; font-weight:700; letter-spacing:-0.01em;}
+  .section-head p{color:var(--muted); font-size:14.5px; margin-top:8px;}
+
+  .steps{display:grid; gap:14px;}
+  .step{
+    display:flex; gap:14px; background:var(--surface); border:1px solid var(--surface-border);
+    border-radius:var(--radius); padding:18px;
+  }
+  .step .num{
+    font-family:'Sora'; font-weight:700; font-size:15px; color:var(--indigo-soft);
+    width:34px; height:34px; flex-shrink:0; border-radius:10px;
+    background:rgba(91,110,245,0.14); display:flex; align-items:center; justify-content:center;
+  }
+  .step h3{font-size:15.5px; font-weight:600;}
+  .step p{color:var(--muted); font-size:13.5px; margin-top:4px; line-height:1.5;}
+
+  .cat-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .cat-card{
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius);
+    padding:18px;
+  }
+  .cat-card h3{font-size:15px; font-weight:600;}
+  .cat-card p{color:var(--muted); font-size:13px; margin-top:6px; line-height:1.5;}
+
+  .plans{display:grid; gap:14px;}
+  .plan{
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius);
+    padding:22px;
+  }
+  .plan.featured{border-color:rgba(91,110,245,0.5); background:rgba(91,110,245,0.07);}
+  .plan .name{font-family:'Sora'; font-weight:700; font-size:17px;}
+  .plan .price{font-family:'Sora'; font-weight:800; font-size:26px; margin-top:8px;}
+  .plan .price span{font-size:13px; color:var(--muted); font-weight:500;}
+  .plan ul{margin-top:14px; padding-left:0; list-style:none; color:var(--muted); font-size:13.5px; line-height:2;}
+  .plan a{
+    display:block; text-align:center; margin-top:16px; padding:11px; border-radius:11px;
+    background:rgba(255,255,255,0.06); font-weight:600; font-size:14px; border:1px solid var(--surface-border);
+  }
+  .plan.featured a{background:linear-gradient(135deg, var(--indigo), #4756D8); border:none;}
+
+  .faq{display:grid; gap:10px;}
+  details{background:var(--surface); border:1px solid var(--surface-border); border-radius:14px; padding:16px 18px;}
+  summary{font-weight:600; font-size:14.5px; cursor:pointer; list-style:none;}
+  summary::-webkit-details-marker{display:none;}
+  details p{color:var(--muted); font-size:13.5px; margin-top:10px; line-height:1.6;}
+
+  .trust-note{
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius);
+    padding:18px; color:var(--muted); font-size:13.5px; line-height:1.6; margin-top:10px;
+  }
+
+  footer{border-top:1px solid var(--surface-border); padding:30px 0 100px; color:var(--muted); font-size:13px;}
+  footer .brand{font-size:16px; margin-bottom:10px;}
+  footer a{display:block; margin-top:6px; color:var(--muted);}
+  footer a:hover{color:var(--text);}
+
+  .bottom-nav{
+    position:fixed; bottom:0; left:0; right:0; z-index:60;
+    display:flex; justify-content:space-around; align-items:center;
+    background:rgba(10,14,31,0.9); backdrop-filter:blur(14px);
+    border-top:1px solid var(--surface-border); padding:10px 0 14px;
+  }
+  .bottom-nav a{font-size:11px; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .bottom-nav a.active{color:var(--indigo-soft);}
+  .bottom-nav .ic{width:20px; height:20px; border-radius:6px; background:rgba(255,255,255,0.08);}
+  @media(min-width:760px){ .bottom-nav{display:none;} body{padding-bottom:0;} }
+  @media(min-width:600px){ .preview-cards, .cat-grid, .plans{grid-template-columns:repeat(3,1fr);} .steps{grid-template-columns:1fr 1fr;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="brand">Earn<span>Nova</span></div>
+    <nav class="nav-links">
+      <a href="#how">How It Works</a>
+      <a href="#earn">Earn</a>
+      <a href="#plans">Plans</a>
+      <a href="#referrals">Referrals</a>
+      <a href="support.html">Support</a>
+    </nav>
+    <a class="nav-cta" href="login.html">Dashboard</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="hero">
+    <h1>Turn your time into real earning opportunities</h1>
+    <p>Complete verified tasks, access useful digital services, and earn through legitimate opportunities — with a transparent wallet and a real transaction ledger behind every rupee.</p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="register.html">Start Earning</a>
+      <a class="btn-ghost" href="#plans">Explore Plans</a>
+    </div>
+    <div class="preview-cards">
+      <div class="stat-card up"><div class="label">Available Balance</div><div class="value">PKR 4,250</div></div>
+      <div class="stat-card"><div class="label">Pending Earnings</div><div class="value">PKR 620</div></div>
+      <div class="stat-card"><div class="label">Completed Tasks</div><div class="value">38</div></div>
+      <div class="stat-card"><div class="label">Referral Earnings</div><div class="value">PKR 900</div></div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="section-head">
+      <h2>How it works</h2>
+      <p>A simple, verified path from task to payout.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><div><h3>Pick a task</h3><p>Browse tasks by category, reward, and estimated time.</p></div></div>
+      <div class="step"><div class="num">2</div><div><h3>Complete & submit proof</h3><p>Follow the instructions and submit your proof for review.</p></div></div>
+      <div class="step"><div class="num">3</div><div><h3>Get verified</h3><p>Our team checks each submission before approving it.</p></div></div>
+      <div class="step"><div class="num">4</div><div><h3>Withdraw manually</h3><p>Request a withdrawal to JazzCash, Easypaisa, or bank — reviewed within 24 hours.</p></div></div>
+    </div>
+  </section>
+
+  <section id="earn">
+    <div class="section-head">
+      <h2>Earning opportunities</h2>
+      <p>Genuine task categories, reviewed before any reward is credited.</p>
+    </div>
+    <div class="cat-grid">
+      <div class="cat-card"><h3>Micro Tasks</h3><p>Short, simple digital actions.</p></div>
+      <div class="cat-card"><h3>Content Tasks</h3><p>Writing, reviews, and content work.</p></div>
+      <div class="cat-card"><h3>Research Tasks</h3><p>Data collection and research work.</p></div>
+      <div class="cat-card"><h3>Digital Tasks</h3><p>App testing and digital services.</p></div>
+      <div class="cat-card"><h3>Promotional Campaigns</h3><p>Verified promotion activities.</p></div>
+      <div class="cat-card"><h3>Affiliate Tasks</h3><p>Genuine affiliate commissions.</p></div>
+    </div>
+  </section>
+
+  <section id="plans">
+    <div class="section-head">
+      <h2>Subscription plans</h2>
+      <p>Plans unlock platform access and task categories — not investment returns.</p>
+    </div>
+    <div class="plans">
+      <div class="plan">
+        <div class="name">Starter</div>
+        <div class="price">PKR 299 <span>/ month</span></div>
+        <ul><li>Basic earning opportunities</li><li>Basic task access</li><li>Basic support</li><li>Wallet access</li></ul>
+        <a href="register.html">Choose Starter</a>
+      </div>
+      <div class="plan featured">
+        <div class="name">Pro</div>
+        <div class="price">PKR 699 <span>/ month</span></div>
+        <ul><li>More task categories</li><li>Higher task access</li><li>Priority support</li><li>Advanced earning opportunities</li></ul>
+        <a href="register.html">Choose Pro</a>
+      </div>
+      <div class="plan">
+        <div class="name">Premium</div>
+        <div class="price">PKR 1,499 <span>/ month</span></div>
+        <ul><li>Premium task access</li><li>Premium campaigns</li><li>Priority support</li><li>Advanced dashboard</li></ul>
+        <a href="register.html">Choose Premium</a>
+      </div>
+    </div>
+    <div class="trust-note">Your earnings depend on available opportunities, task completion, approval, and applicable platform rules. Subscriptions are not an investment and do not guarantee income.</div>
+  </section>
+
+  <section id="referrals">
+    <div class="section-head">
+      <h2>Referral program</h2>
+      <p>Invite others and earn a commission funded by genuine platform revenue — not by what your referral deposits.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><div><h3>Share your link</h3><p>Every account gets a unique referral code and link.</p></div></div>
+      <div class="step"><div class="num">2</div><div><h3>They complete tasks</h3><p>Your referral becomes active once they engage on the platform.</p></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Secure wallet, manual withdrawal</h2></div>
+    <div class="trust-note">Deposits and withdrawals are manually reviewed — normally processed within 24 hours. No balance is ever changed from the browser; every change comes from a verified transaction on our backend.</div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Frequently asked questions</h2></div>
+    <div class="faq">
+      <details><summary>Are earnings guaranteed?</summary><p>No. Earnings depend on task availability, completion, and admin approval.</p></details>
+      <details><summary>How long do withdrawals take?</summary><p>Withdrawals are manually reviewed and normally processed within 24 hours.</p></details>
+      <details><summary>Is EarnNova an investment platform?</summary><p>No. EarnNova pays for completed, verified work and platform services — it is not an investment product.</p></details>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="brand">Earn<span style="color:var(--indigo-soft)">Nova</span></div>
+    <p>Earn Smart. Work Genuine. Grow Together.</p>
+    <a href="support.html">Support Center</a>
+    <a href="#">Terms & Conditions</a>
+    <a href="#">Privacy Policy</a>
+  </div>
+</footer>
+
+<nav class="bottom-nav">
+  <a class="active" href="index.html"><div class="ic"></div>Home</a>
+  <a href="login.html"><div class="ic"></div>Earn</a>
+  <a href="login.html"><div class="ic"></div>Wallet</a>
+  <a href="login.html"><div class="ic"></div>Referrals</a>
+  <a href="login.html"><div class="ic"></div>Profile</a>
+</nav>
+
+</body>
+</html>
