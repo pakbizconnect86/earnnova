@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile — EarnNova</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:80px;
+  }
+  h1,h2,.brand{font-family:'Sora', sans-serif;}
+  a, button{color:inherit; text-decoration:none;}
+  .wrap{max-width:560px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; gap:14px; padding:14px 18px; max-width:560px; margin:0 auto;}
+  .back{font-size:18px;}
+  .nav h1{font-size:17px; font-weight:700;}
+
+  .profile-head{display:flex; align-items:center; gap:14px; margin-top:22px;}
+  .avatar{
+    width:58px; height:58px; border-radius:50%; background:linear-gradient(135deg, var(--indigo), #4756D8);
+    display:flex; align-items:center; justify-content:center; font-family:'Sora'; font-weight:700; font-size:22px;
+  }
+  .profile-head h2{font-size:18px; font-weight:700;}
+  .profile-head p{color:var(--muted); font-size:12.5px; margin-top:3px;}
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px; margin-top:6px; padding:4px 10px;
+    border-radius:999px; background:rgba(34,211,184,0.12); color:var(--teal); font-size:11px; font-weight:600;
+  }
+
+  .card{background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:6px 0; margin-top:20px;}
+  .row{
+    display:flex; justify-content:space-between; align-items:center; padding:14px 18px;
+    border-bottom:1px solid var(--surface-border); font-size:13.5px;
+  }
+  .row:last-child{border-bottom:none;}
+  .row .l{color:var(--muted);}
+  .row .v{font-weight:600;}
+
+  .section-head{margin-top:22px; margin-bottom:10px;}
+  .section-head h2{font-size:14.5px; font-weight:700; color:var(--muted);}
+
+  .action-row{
+    display:flex; justify-content:space-between; align-items:center; padding:15px 18px;
+    border-bottom:1px solid var(--surface-border); font-size:14px; font-weight:600; cursor:pointer;
+  }
+  .action-row:last-child{border-bottom:none;}
+  .action-row .arrow{color:var(--muted);}
+  .action-row.danger{color:var(--danger);}
+
+  .msg{font-size:12.5px; text-align:center; margin-top:14px; min-height:16px;}
+  .msg.ok{color:var(--teal);}
+  .msg.err{color:var(--danger);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="back" href="dashboard.html">←</a>
+    <h1>Profile</h1>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="profile-head">
+    <div class="avatar" id="avatarInitial">?</div>
+    <div>
+      <h2 id="fullName">Loading...</h2>
+      <p id="userIdLine">—</p>
+      <div class="status-pill"><span id="statusText">Active</span></div>
+    </div>
+  </div>
+
+  <div class="section-head"><h2>ACCOUNT DETAILS</h2></div>
+  <div class="card">
+    <div class="row"><span class="l">Email</span><span class="v" id="email">—</span></div>
+    <div class="row"><span class="l">Phone</span><span class="v" id="phone">—</span></div>
+    <div class="row"><span class="l">Referral Code</span><span class="v" id="refCode">—</span></div>
+    <div class="row"><span class="l">Account Created</span><span class="v" id="createdAt">—</span></div>
+    <div class="row"><span class="l">Subscription</span><span class="v" id="subPlan">None</span></div>
+  </div>
+
+  <div class="section-head"><h2>SETTINGS</h2></div>
+  <div class="card">
+    <div class="action-row" id="changePwd"><span>Change Password</span><span class="arrow">›</span></div>
+    <a class="action-row" href="support.html"><span>Support Center</span><span class="arrow">›</span></a>
+    <div class="action-row danger" id="logoutBtn"><span>Logout</span><span class="arrow">›</span></div>
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+</div>
+
+<nav class="bottom-nav" style="position:fixed; bottom:0; left:0; right:0; z-index:60; display:flex; justify-content:space-around; align-items:center; background:rgba(10,14,31,0.92); backdrop-filter:blur(14px); border-top:1px solid var(--surface-border); padding:10px 0 14px;">
+  <a href="dashboard.html" style="font-size:11px; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:4px;"><div style="width:20px; height:20px; border-radius:6px; background:rgba(255,255,255,0.08);"></div>Home</a>
+  <a href="tasks.html" style="font-size:11px; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:4px;"><div style="width:20px; height:20px; border-radius:6px; background:rgba(255,255,255,0.08);"></div>Earn</a>
+  <a href="wallet.html" style="font-size:11px; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:4px;"><div style="width:20px; height:20px; border-radius:6px; background:rgba(255,255,255,0.08);"></div>Wallet</a>
+  <a href="referrals.html" style="font-size:11px; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:4px;"><div style="width:20px; height:20px; border-radius:6px; background:rgba(255,255,255,0.08);"></div>Referrals</a>
+  <a href="profile.html" style="font-size:11px; color:var(--indigo-soft); display:flex; flex-direction:column; align-items:center; gap:4px;"><div style="width:20px; height:20px; border-radius:6px; background:rgba(255,255,255,0.08);"></div>Profile</a>
+</nav>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  let currentUser = null;
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await auth.signOut();
+    window.location.href = 'login.html';
+  });
+
+  document.getElementById('changePwd').addEventListener('click', async () => {
+    const msg = document.getElementById('msg');
+    msg.textContent = '';
+    try {
+      await auth.sendPasswordResetEmail(currentUser.email);
+      msg.textContent = 'Password reset link sent to your email.';
+      msg.className = 'msg ok';
+    } catch (err) {
+      msg.textContent = 'Something went wrong. Please try again.';
+      msg.className = 'msg err';
+    }
+  });
+
+  requireAuth(async (user) => {
+    currentUser = user;
+    try {
+      const userDoc = await db.collection(COL.users).doc(user.uid).get();
+      const u = userDoc.data() || {};
+
+      document.getElementById('fullName').textContent = u.fullName || 'User';
+      document.getElementById('avatarInitial').textContent = (u.fullName || 'U').charAt(0).toUpperCase();
+      document.getElementById('userIdLine').textContent = u.userId || '—';
+      document.getElementById('statusText').textContent = u.status || 'Active';
+      document.getElementById('email').textContent = u.email || '—';
+      document.getElementById('phone').textContent = u.phone || '—';
+      document.getElementById('refCode').textContent = u.referralCode || '—';
+      document.getElementById('createdAt').textContent = u.createdAt
+        ? u.createdAt.toDate().toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })
+        : '—';
+
+      const subQuery = await db.collection(COL.subscriptions)
+        .where('userId', '==', user.uid).where('status', '==', 'Active').limit(1).get();
+      if (!subQuery.empty) {
+        document.getElementById('subPlan').textContent = subQuery.docs[0].data().planName || 'Active';
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
+</script>
+</body>
+</html>

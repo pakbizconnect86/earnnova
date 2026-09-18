@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Details — EarnNova</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:40px;
+  }
+  h1,h2,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:560px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; gap:14px; padding:14px 18px; max-width:560px; margin:0 auto;}
+  .back{font-size:18px;}
+  .nav h1{font-size:16px; font-weight:700;}
+
+  .head-card{margin-top:18px;}
+  .task-cat{font-size:11.5px; color:var(--indigo-soft); font-weight:600;}
+  .task-title{font-size:22px; font-weight:800; margin-top:6px; line-height:1.2;}
+  .reward-row{display:flex; align-items:center; gap:10px; margin-top:12px;}
+  .reward-pill{
+    background:rgba(34,211,184,0.14); color:var(--teal); font-family:'Sora'; font-weight:800; font-size:16px;
+    padding:6px 14px; border-radius:999px;
+  }
+  .task-status{padding:5px 12px; border-radius:999px; font-size:11px; font-weight:700; background:rgba(91,110,245,0.14); color:var(--indigo-soft);}
+
+  .meta-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px;}
+  .meta-card{background:var(--surface); border:1px solid var(--surface-border); border-radius:14px; padding:12px 14px;}
+  .meta-card .l{color:var(--muted); font-size:11px;}
+  .meta-card .v{font-size:13.5px; font-weight:600; margin-top:4px;}
+
+  .card{background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:18px; margin-top:16px;}
+  .card h2{font-size:14.5px; font-weight:700; margin-bottom:8px;}
+  .card p{color:var(--muted); font-size:13.5px; line-height:1.6;}
+  .card ul{margin-top:8px; padding-left:18px; color:var(--muted); font-size:13.5px; line-height:1.7;}
+
+  label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px; margin-top:4px;}
+  textarea, input{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--surface-border);
+    border-radius:12px; padding:12px 14px; color:var(--text); font-size:14px; outline:none; font-family:inherit;
+  }
+  textarea{min-height:100px; resize:vertical;}
+  textarea:focus, input:focus{border-color:var(--indigo-soft);}
+
+  button{
+    width:100%; margin-top:16px; padding:13px; border:none; border-radius:13px; font-weight:600; font-size:14.5px;
+    background:linear-gradient(135deg, var(--indigo), #4756D8); color:#fff; cursor:pointer;
+  }
+  button:disabled{opacity:0.6;}
+  .error{color:var(--danger); font-size:13px; min-height:16px; margin-top:6px;}
+
+  .status-banner{
+    margin-top:16px; padding:14px 16px; border-radius:14px; font-size:13.5px; line-height:1.5;
+    background:rgba(91,110,245,0.1); border:1px solid rgba(91,110,245,0.28); color:var(--indigo-soft);
+  }
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="back" href="tasks.html">←</a>
+    <h1>Task Details</h1>
+  </div>
+</header>
+
+<div class="wrap" id="content">
+  <div class="empty" style="color:var(--muted); text-align:center; padding:40px 0;">Loading...</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK'); }
+  const params = new URLSearchParams(window.location.search);
+  const taskId = params.get('id');
+  let currentUser = null;
+
+  function renderTask(task, existingSubmission) {
+    const content = document.getElementById('content');
+    const deadlineStr = task.deadline ? new Date(task.deadline).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+
+    let actionHtml = '';
+    if (existingSubmission) {
+      const statusMsg = {
+        'Submitted': 'Task submitted successfully. Your submission is under review.',
+        'Under Review': 'Your submission is currently under review.',
+        'Approved': 'Your submission was approved and the reward has been credited to your pending earnings.',
+        'Rejected': `Your submission was rejected. ${existingSubmission.rejectionReason || ''}`
+      };
+      actionHtml = `<div class="status-banner">${statusMsg[existingSubmission.status] || existingSubmission.status}</div>`;
+    } else if (task.status !== 'Available') {
+      actionHtml = `<div class="status-banner">This task is currently ${task.status}.</div>`;
+    } else {
+      actionHtml = `
+        <div class="card">
+          <h2>Submit your proof</h2>
+          <label for="proofText">Proof of completion</label>
+          <textarea id="proofText" placeholder="Describe what you did / paste a link as proof"></textarea>
+          <div class="error" id="errorMsg"></div>
+          <button id="submitBtn">Submit Task</button>
+        </div>
+      `;
+    }
+
+    content.innerHTML = `
+      <div class="head-card">
+        <div class="task-cat">${task.category || ''}</div>
+        <div class="task-title">${task.title || 'Untitled task'}</div>
+        <div class="reward-row">
+          <div class="reward-pill">${fmt(task.reward)}</div>
+          <div class="task-status">${task.status || 'Available'}</div>
+        </div>
+      </div>
+
+      <div class="meta-grid">
+        <div class="meta-card"><div class="l">Estimated time</div><div class="v">${task.estimatedTime || '—'}</div></div>
+        <div class="meta-card"><div class="l">Deadline</div><div class="v">${deadlineStr}</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Description</h2>
+        <p>${task.description || 'No description provided.'}</p>
+      </div>
+
+      <div class="card">
+        <h2>Instructions</h2>
+        <p>${task.instructions || 'No additional instructions.'}</p>
+      </div>
+
+      ${task.requirements ? `
+      <div class="card">
+        <h2>Requirements</h2>
+        <p>${task.requirements}</p>
+      </div>` : ''}
+
+      ${actionHtml}
+    `;
+
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', async () => {
+        const errorMsg = document.getElementById('errorMsg');
+        const proofText = document.getElementById('proofText').value.trim();
+        if (!proofText) { errorMsg.textContent = 'Please provide proof before submitting.'; return; }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+
+        try {
+          await db.collection(COL.submissions).add({
+            taskId,
+            taskTitle: task.title,
+            userId: currentUser.uid,
+            proof: proofText,
+            reward: task.reward,
+            status: 'Submitted',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          await db.collection(COL.notifications).add({
+            userId: currentUser.uid,
+            title: 'Task submitted',
+            message: `Your submission for "${task.title}" is under review.`,
+            read: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          renderTask(task, { status: 'Submitted' });
+        } catch (err) {
+          console.error(err);
+          errorMsg.textContent = 'Something went wrong. Please try again.';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Task';
+        }
+      });
+    }
+  }
+
+  requireAuth(async (user) => {
+    currentUser = user;
+    if (!taskId) {
+      document.getElementById('content').innerHTML = '<div style="color:var(--muted); text-align:center; padding:40px 0;">Task not found.</div>';
+      return;
+    }
+    try {
+      const taskDoc = await db.collection(COL.tasks).doc(taskId).get();
+      if (!taskDoc.exists) {
+        document.getElementById('content').innerHTML = '<div style="color:var(--muted); text-align:center; padding:40px 0;">Task not found.</div>';
+        return;
+      }
+      const task = taskDoc.data();
+
+      const subQuery = await db.collection(COL.submissions)
+        .where('taskId', '==', taskId).where('userId', '==', currentUser.uid).limit(1).get();
+      const existing = subQuery.empty ? null : subQuery.docs[0].data();
+
+      renderTask(task, existing);
+    } catch (err) {
+      console.error(err);
+      document.getElementById('content').innerHTML = '<div style="color:var(--muted); text-align:center; padding:40px 0;">Something went wrong. Please try again.</div>';
+    }
+  });
+</script>
+</body>
+</html>
