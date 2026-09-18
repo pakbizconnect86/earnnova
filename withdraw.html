@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Withdraw — EarnNova</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:40px;
+  }
+  h1,h2,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:520px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; gap:14px; padding:14px 18px; max-width:520px; margin:0 auto;}
+  .back{font-size:18px;}
+  .nav h1{font-size:17px; font-weight:700;}
+
+  .balance-card{
+    margin-top:18px; padding:18px; border-radius:16px;
+    background:linear-gradient(135deg, rgba(91,110,245,0.18), rgba(91,110,245,0.04));
+    border:1px solid rgba(91,110,245,0.3); display:flex; justify-content:space-between; align-items:center;
+  }
+  .balance-card .label{color:var(--muted); font-size:12.5px;}
+  .balance-card .value{font-family:'Sora'; font-size:22px; font-weight:700; margin-top:4px;}
+  .balance-card .min{font-size:11.5px; color:var(--muted); text-align:right;}
+
+  .card{background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:20px; margin-top:16px;}
+
+  .method-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+  .method{
+    border:1px solid var(--surface-border); border-radius:14px; padding:16px 8px; text-align:center;
+    cursor:pointer; font-size:12.5px; font-weight:600;
+  }
+  .method.selected{border-color:var(--indigo); background:rgba(91,110,245,0.1); color:var(--indigo-soft);}
+  .method .ic{font-size:22px; margin-bottom:6px;}
+
+  label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px; margin-top:14px;}
+  input{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--surface-border);
+    border-radius:12px; padding:12px 14px; color:var(--text); font-size:14.5px; outline:none;
+  }
+  input:focus{border-color:var(--indigo-soft);}
+
+  .confirm-box{
+    background:rgba(255,255,255,0.04); border:1px solid var(--surface-border); border-radius:12px;
+    padding:14px; margin-top:16px; font-size:13.5px; line-height:1.6; display:none;
+  }
+  .confirm-box.show{display:block;}
+  .confirm-box b{color:var(--text);}
+
+  .note{
+    background:rgba(91,110,245,0.08); border:1px solid rgba(91,110,245,0.25); border-radius:12px;
+    padding:12px 14px; font-size:12.5px; color:var(--indigo-soft); margin-top:14px; line-height:1.5;
+  }
+
+  button{
+    width:100%; margin-top:20px; padding:13px; border:none; border-radius:13px; font-weight:600; font-size:14.5px;
+    background:linear-gradient(135deg, var(--indigo), #4756D8); color:#fff; cursor:pointer;
+  }
+  button:disabled{opacity:0.6;}
+  .error{color:var(--danger); font-size:13px; min-height:16px; margin-top:8px;}
+
+  .success-card{text-align:center; padding:32px 20px;}
+  .success-card .ic{font-size:44px;}
+  .success-card h2{font-size:18px; margin-top:14px;}
+  .success-card p{color:var(--muted); font-size:13.5px; margin-top:8px; line-height:1.55;}
+  .success-card a{
+    display:inline-block; margin-top:20px; padding:12px 24px; border-radius:12px;
+    background:var(--surface); border:1px solid var(--surface-border); font-weight:600; font-size:14px;
+  }
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="back" href="wallet.html">←</a>
+    <h1>Withdraw</h1>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="balance-card">
+    <div>
+      <div class="label">Available Balance</div>
+      <div class="value" id="availBal">PKR 0</div>
+    </div>
+    <div class="min">Minimum withdrawal<br><b id="minAmt">PKR 500</b></div>
+  </div>
+
+  <div class="card" id="formCard">
+    <h2 style="font-size:15.5px; font-weight:700; margin-bottom:14px;">Withdrawal details</h2>
+
+    <label>Payment method</label>
+    <div class="method-grid">
+      <div class="method" data-method="JazzCash"><div class="ic">📱</div>JazzCash</div>
+      <div class="method" data-method="Easypaisa"><div class="ic">💚</div>Easypaisa</div>
+      <div class="method" data-method="Bank Transfer"><div class="ic">🏦</div>Bank</div>
+    </div>
+
+    <label for="amount">Amount (PKR)</label>
+    <input id="amount" type="number" min="1" placeholder="e.g. 1000">
+
+    <label for="accName">Account holder name</label>
+    <input id="accName" type="text" placeholder="Full name on the account">
+
+    <label for="accNumber">Account number / mobile number</label>
+    <input id="accNumber" type="text" placeholder="03XXXXXXXXX or account number">
+
+    <div class="note">Manual Review — Normally Processed Within 24 Hours</div>
+
+    <div class="confirm-box" id="confirmBox"></div>
+    <div class="error" id="errorMsg"></div>
+
+    <button id="reviewBtn">Review Request</button>
+    <button id="confirmBtn" class="hidden">Confirm Withdrawal Request</button>
+  </div>
+
+  <div class="card success-card hidden" id="stepSuccess">
+    <div class="ic">⏳</div>
+    <h2>Withdrawal Under Review</h2>
+    <p>Your withdrawal request is being manually reviewed. Withdrawals are normally processed within 24 hours.</p>
+    <a href="wallet.html">Back to Wallet</a>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK'); }
+
+  let selectedMethod = null;
+  let currentUser = null;
+  let availableBalance = 0;
+  let minWithdrawal = 500;
+
+  document.querySelectorAll('.method').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.method').forEach(m => m.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedMethod = el.dataset.method;
+    });
+  });
+
+  document.getElementById('reviewBtn').addEventListener('click', () => {
+    const errorMsg = document.getElementById('errorMsg');
+    errorMsg.textContent = '';
+    const amount = parseFloat(document.getElementById('amount').value);
+    const accName = document.getElementById('accName').value.trim();
+    const accNumber = document.getElementById('accNumber').value.trim();
+
+    if (!selectedMethod) { errorMsg.textContent = 'Please select a payment method.'; return; }
+    if (!amount || amount <= 0) { errorMsg.textContent = 'Please enter a valid amount.'; return; }
+    if (amount < minWithdrawal) { errorMsg.textContent = `Minimum withdrawal amount is ${fmt(minWithdrawal)}.`; return; }
+    if (amount > availableBalance) { errorMsg.textContent = 'Insufficient available balance.'; return; }
+    if (!accName) { errorMsg.textContent = 'Account holder name is required.'; return; }
+    if (!accNumber) { errorMsg.textContent = 'Account number / mobile number is required.'; return; }
+
+    const box = document.getElementById('confirmBox');
+    box.innerHTML = `You are requesting a withdrawal of <b>${fmt(amount)}</b> via <b>${selectedMethod}</b> to <b>${accName}</b> (${accNumber}).`;
+    box.classList.add('show');
+    document.getElementById('reviewBtn').classList.add('hidden');
+    document.getElementById('confirmBtn').classList.remove('hidden');
+  });
+
+  document.getElementById('confirmBtn').addEventListener('click', async () => {
+    const errorMsg = document.getElementById('errorMsg');
+    errorMsg.textContent = '';
+    const btn = document.getElementById('confirmBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
+    const amount = parseFloat(document.getElementById('amount').value);
+    const accName = document.getElementById('accName').value.trim();
+    const accNumber = document.getElementById('accNumber').value.trim();
+
+    try {
+      const withdrawalId = generateRefId('WD');
+      await db.collection(COL.withdrawals).add({
+        withdrawalId,
+        userId: currentUser.uid,
+        amount,
+        method: selectedMethod,
+        accountHolderName: accName,
+        accountNumber: accNumber,
+        status: 'Pending Review',
+        paymentRef: null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // NOTE: In production, moving the amount into "withdrawalPending" and out of
+      // "availableBalance" must happen via a secure backend (Cloud Function/Worker)
+      // triggered by this withdrawal request — never directly from client code.
+
+      document.getElementById('formCard').classList.add('hidden');
+      document.getElementById('stepSuccess').classList.remove('hidden');
+    } catch (err) {
+      console.error(err);
+      errorMsg.textContent = 'Something went wrong. Please try again.';
+      btn.disabled = false;
+      btn.textContent = 'Confirm Withdrawal Request';
+    }
+  });
+
+  requireAuth(async (user) => {
+    currentUser = user;
+    try {
+      const walletDoc = await db.collection(COL.wallets).doc(user.uid).get();
+      const w = walletDoc.data() || {};
+      availableBalance = w.availableBalance || 0;
+      document.getElementById('availBal').textContent = fmt(availableBalance);
+
+      const settingsDoc = await db.collection(COL.settings).doc('withdrawal').get();
+      if (settingsDoc.exists && settingsDoc.data().minWithdrawal) {
+        minWithdrawal = settingsDoc.data().minWithdrawal;
+      }
+      document.getElementById('minAmt').textContent = fmt(minWithdrawal);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+</script>
+</body>
+</html>
