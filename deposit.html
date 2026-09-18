@@ -37,11 +37,18 @@
 
   .method-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
   .method{
-    border:1px solid var(--surface-border); border-radius:14px; padding:16px 8px; text-align:center;
-    cursor:pointer; font-size:12.5px; font-weight:600;
+    border:1px solid var(--surface-border); border-radius:14px; padding:14px 8px; text-align:center;
+    cursor:pointer; font-size:12px; font-weight:600;
   }
   .method.selected{border-color:var(--indigo); background:rgba(91,110,245,0.1); color:var(--indigo-soft);}
-  .method .ic{font-size:22px; margin-bottom:6px;}
+  .pay-ic{
+    width:38px; height:38px; margin:0 auto 8px; border-radius:11px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Sora'; font-weight:800; font-size:15px; color:#fff;
+  }
+  .pay-ic.jazzcash{background:linear-gradient(135deg, #E9312A, #A30014);}
+  .pay-ic.easypaisa{background:linear-gradient(135deg, #2EBD5C, #0E7A38);}
+  .pay-ic.bank{background:linear-gradient(135deg, var(--indigo), #4756D8);}
 
   .info-row{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--surface-border); font-size:13.5px;}
   .info-row:last-child{border-bottom:none;}
@@ -100,10 +107,11 @@
   <div class="card" id="step1">
     <h2>1. Select payment method</h2>
     <div class="method-grid">
-      <div class="method" data-method="JazzCash"><div class="ic">📱</div>JazzCash</div>
-      <div class="method" data-method="Easypaisa"><div class="ic">💚</div>Easypaisa</div>
-      <div class="method" data-method="Bank Transfer"><div class="ic">🏦</div>Bank</div>
+      <div class="method" data-method="JazzCash"><div class="pay-ic jazzcash">JC</div>JazzCash</div>
+      <div class="method" data-method="Easypaisa"><div class="pay-ic easypaisa">EP</div>Easypaisa</div>
+      <div class="method" data-method="Bank Transfer"><div class="pay-ic bank">🏦</div>Bank</div>
     </div>
+    <div class="note" id="minDepositNote">Minimum deposit: PKR 100</div>
     <button id="toStep2" disabled>Continue</button>
   </div>
 
@@ -144,6 +152,7 @@
 <script>
   let selectedMethod = null;
   let currentUser = null;
+  let minDeposit = 100;
 
   // Default payment details — admin can override these via earnnova_settings/payment doc
   const defaultDetails = {
@@ -190,6 +199,7 @@
     const txnId = document.getElementById('txnId').value.trim();
 
     if (!amount || amount <= 0) { errorMsg.textContent = 'Please enter a valid amount.'; return; }
+    if (amount < minDeposit) { errorMsg.textContent = `Minimum deposit amount is PKR ${minDeposit.toLocaleString('en-PK')}.`; return; }
     if (!txnId) { errorMsg.textContent = 'Transaction ID is required.'; return; }
 
     const btn = document.getElementById('submitDeposit');
@@ -224,6 +234,12 @@
     try {
       const settingsDoc = await db.collection(COL.settings).doc('payment').get();
       if (settingsDoc.exists) paymentDetails = { ...defaultDetails, ...settingsDoc.data() };
+
+      const depSettings = await db.collection(COL.settings).doc('deposit').get();
+      if (depSettings.exists && depSettings.data().minDeposit) {
+        minDeposit = depSettings.data().minDeposit;
+      }
+      document.getElementById('minDepositNote').textContent = `Minimum deposit: PKR ${minDeposit.toLocaleString('en-PK')}`;
     } catch (err) {
       console.error(err);
     }

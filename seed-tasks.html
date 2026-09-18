@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seed Tasks — EarnNova Admin Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    min-height:100vh; padding:24px 18px 60px;
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif;
+  }
+  .wrap{max-width:520px; margin:0 auto;}
+  h1{font-family:'Sora'; font-size:20px; font-weight:700;}
+  p.sub{color:var(--muted); font-size:13.5px; margin-top:8px; line-height:1.5;}
+  .card{background:var(--surface); border:1px solid var(--surface-border); border-radius:16px; padding:18px; margin-top:20px;}
+  .task-row{display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--surface-border); font-size:13px;}
+  .task-row:last-child{border-bottom:none;}
+  .task-row .r{color:var(--teal); font-weight:700;}
+  button{
+    width:100%; margin-top:20px; padding:13px; border:none; border-radius:13px; font-weight:600; font-size:14.5px;
+    background:linear-gradient(135deg, var(--indigo), #4756D8); color:#fff; cursor:pointer;
+  }
+  button:disabled{opacity:0.6;}
+  .status{font-size:13px; margin-top:14px; text-align:center; min-height:18px;}
+  .status.ok{color:var(--teal);}
+  .status.err{color:var(--danger);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Seed Sample Tasks</h1>
+  <p class="sub">One-time admin tool — adds 8 sample earning tasks to the live task marketplace. Only works if your account has role = "admin" in earnnova_users. Delete this file after use.</p>
+
+  <div class="card" id="previewCard">
+    <div style="text-align:center; color:var(--muted); font-size:13.5px;">Checking admin access...</div>
+  </div>
+
+  <button id="seedBtn" style="display:none;">Add These Tasks</button>
+  <div class="status" id="statusMsg"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  const sampleTasks = [
+    {
+      title: "Write a 300-word product review",
+      category: "Content Tasks",
+      description: "Write an honest, well-structured 300-word review for a given product based on provided details.",
+      instructions: "Read the product brief we send you, write a clear 300-word review covering pros, cons, and a verdict. Submit as plain text.",
+      requirements: "Good written English, no plagiarism, no AI-generated boilerplate.",
+      reward: 250,
+      estimatedTime: "30-40 min",
+      deadlineDays: 7,
+      status: "Available"
+    },
+    {
+      title: "App store screenshot testing",
+      category: "Digital Tasks",
+      description: "Install a given Android app, complete a short walkthrough, and report any bugs or UI issues you find.",
+      instructions: "Install the app from the link provided, use it for 10 minutes, take 3 screenshots, and list any issues found.",
+      requirements: "Android phone required. Submit screenshots + written notes.",
+      reward: 180,
+      estimatedTime: "20 min",
+      deadlineDays: 5,
+      status: "Available"
+    },
+    {
+      title: "Local market price survey",
+      category: "Research Tasks",
+      description: "Visit 3 local shops in your area and note down prices for 5 given grocery items.",
+      instructions: "Visit any 3 shops, record prices for the given item list, submit as a simple table (item, shop, price).",
+      requirements: "Must be based in Pakistan. Submit real, verifiable data.",
+      reward: 300,
+      estimatedTime: "45 min",
+      deadlineDays: 10,
+      status: "Available"
+    },
+    {
+      title: "Social media poll response",
+      category: "Micro Tasks",
+      description: "Answer a short 6-question survey about your online shopping habits.",
+      instructions: "Open the survey link, answer honestly, submit the completion code shown at the end.",
+      requirements: "One submission per person.",
+      reward: 60,
+      estimatedTime: "5 min",
+      deadlineDays: 3,
+      status: "Available"
+    },
+    {
+      title: "Share our launch post",
+      category: "Promotional Campaigns",
+      description: "Share the EarnNova launch post on your WhatsApp status or Facebook for 24 hours.",
+      instructions: "Post the given image/caption, keep it live for at least 24 hours, submit a screenshot as proof.",
+      requirements: "Public profile/status. Screenshot must show timestamp.",
+      reward: 120,
+      estimatedTime: "5 min + 24hr hold",
+      deadlineDays: 7,
+      status: "Available"
+    },
+    {
+      title: "Refer a freelancer to our affiliate program",
+      category: "Affiliate Tasks",
+      description: "Bring a genuine freelancer or small business to sign up via your affiliate link for our partner tool.",
+      instructions: "Share your affiliate link, ensure the referral completes signup, submit their signup email for verification.",
+      requirements: "No self-referrals or duplicate accounts.",
+      reward: 400,
+      estimatedTime: "Varies",
+      deadlineDays: 14,
+      status: "Available"
+    },
+    {
+      title: "Transcribe a 5-minute audio clip",
+      category: "Content Tasks",
+      description: "Transcribe a short Urdu/English audio clip into accurate text.",
+      instructions: "Download the audio file, transcribe word-for-word, submit as a text file.",
+      requirements: "Good listening/typing skills. No auto-transcription tools with unreviewed output.",
+      reward: 220,
+      estimatedTime: "25 min",
+      deadlineDays: 6,
+      status: "Available"
+    },
+    {
+      title: "Test a website's mobile checkout flow",
+      category: "Digital Tasks",
+      description: "Go through a test e-commerce checkout on mobile and report where the flow breaks or feels confusing.",
+      instructions: "Add an item to cart, go through checkout using test card details provided, note every step and any friction.",
+      requirements: "Mobile browser only. Detailed step-by-step notes required.",
+      reward: 200,
+      estimatedTime: "15 min",
+      deadlineDays: 5,
+      status: "Available"
+    }
+  ];
+
+  const previewCard = document.getElementById('previewCard');
+  const seedBtn = document.getElementById('seedBtn');
+  const statusMsg = document.getElementById('statusMsg');
+
+  function renderPreview() {
+    previewCard.innerHTML = sampleTasks.map(t =>
+      `<div class="task-row"><span>${t.title}</span><span class="r">PKR ${t.reward}</span></div>`
+    ).join('');
+    seedBtn.style.display = 'block';
+  }
+
+  seedBtn.addEventListener('click', async () => {
+    seedBtn.disabled = true;
+    seedBtn.textContent = 'Adding tasks...';
+    statusMsg.textContent = '';
+    statusMsg.className = 'status';
+
+    try {
+      const existing = await db.collection(COL.tasks).get();
+      if (!existing.empty) {
+        statusMsg.textContent = `Tasks already exist (${existing.size} found) — skipping to avoid duplicates. Delete existing tasks first if you want to re-seed.`;
+        statusMsg.className = 'status err';
+        seedBtn.disabled = false;
+        seedBtn.textContent = 'Add These Tasks';
+        return;
+      }
+
+      const now = Date.now();
+      for (const t of sampleTasks) {
+        const { deadlineDays, ...rest } = t;
+        await db.collection(COL.tasks).add({
+          ...rest,
+          deadline: now + deadlineDays * 86400000,
+          maxSubmissions: null,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      statusMsg.textContent = `Done — ${sampleTasks.length} tasks added. Check the Earn tab.`;
+      statusMsg.className = 'status ok';
+      seedBtn.textContent = 'Tasks Added ✓';
+    } catch (err) {
+      console.error(err);
+      statusMsg.textContent = 'Failed to add tasks. Check console for details — likely a permissions issue (are you set as admin?).';
+      statusMsg.className = 'status err';
+      seedBtn.disabled = false;
+      seedBtn.textContent = 'Add These Tasks';
+    }
+  });
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      previewCard.innerHTML = '<div style="text-align:center; color:var(--danger); font-size:13.5px;">Please log in first (login.html), then open this page again.</div>';
+      return;
+    }
+    try {
+      const userDoc = await db.collection(COL.users).doc(user.uid).get();
+      const role = userDoc.exists ? userDoc.data().role : 'user';
+      if (role !== 'admin') {
+        previewCard.innerHTML = `<div style="text-align:center; color:var(--danger); font-size:13.5px;">Your account is not set as admin yet.<br><br>Go to Firebase Console → Firestore → <b>earnnova_users</b> → your document (uid: ${user.uid}) → add field <b>role</b> = <b>"admin"</b> (string), then reload this page.</div>`;
+        return;
+      }
+      renderPreview();
+    } catch (err) {
+      console.error(err);
+      previewCard.innerHTML = '<div style="text-align:center; color:var(--danger); font-size:13.5px;">Something went wrong. Please try again.</div>';
+    }
+  });
+</script>
+</body>
+</html>

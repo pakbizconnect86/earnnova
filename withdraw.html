@@ -41,11 +41,18 @@
 
   .method-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
   .method{
-    border:1px solid var(--surface-border); border-radius:14px; padding:16px 8px; text-align:center;
-    cursor:pointer; font-size:12.5px; font-weight:600;
+    border:1px solid var(--surface-border); border-radius:14px; padding:14px 8px; text-align:center;
+    cursor:pointer; font-size:12px; font-weight:600;
   }
   .method.selected{border-color:var(--indigo); background:rgba(91,110,245,0.1); color:var(--indigo-soft);}
-  .method .ic{font-size:22px; margin-bottom:6px;}
+  .pay-ic{
+    width:38px; height:38px; margin:0 auto 8px; border-radius:11px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Sora'; font-weight:800; font-size:15px; color:#fff;
+  }
+  .pay-ic.jazzcash{background:linear-gradient(135deg, #E9312A, #A30014);}
+  .pay-ic.easypaisa{background:linear-gradient(135deg, #2EBD5C, #0E7A38);}
+  .pay-ic.bank{background:linear-gradient(135deg, var(--indigo), #4756D8);}
 
   label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px; margin-top:14px;}
   input{
@@ -108,9 +115,9 @@
 
     <label>Payment method</label>
     <div class="method-grid">
-      <div class="method" data-method="JazzCash"><div class="ic">📱</div>JazzCash</div>
-      <div class="method" data-method="Easypaisa"><div class="ic">💚</div>Easypaisa</div>
-      <div class="method" data-method="Bank Transfer"><div class="ic">🏦</div>Bank</div>
+      <div class="method" data-method="JazzCash"><div class="pay-ic jazzcash">JC</div>JazzCash</div>
+      <div class="method" data-method="Easypaisa"><div class="pay-ic easypaisa">EP</div>Easypaisa</div>
+      <div class="method" data-method="Bank Transfer"><div class="pay-ic bank">🏦</div>Bank</div>
     </div>
 
     <label for="amount">Amount (PKR)</label>
