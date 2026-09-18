@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transactions — EarnNova</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:40px;
+  }
+  h1,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:760px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; gap:14px; padding:14px 18px; max-width:760px; margin:0 auto;}
+  .back{font-size:18px;}
+  .nav h1{font-size:17px; font-weight:700;}
+
+  .search-box{
+    margin-top:18px; display:flex; align-items:center; gap:8px;
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:14px; padding:12px 14px;
+  }
+  .search-box input{
+    background:none; border:none; outline:none; color:var(--text); font-size:14px; flex:1;
+  }
+  .search-box input::placeholder{color:var(--muted);}
+
+  .filter-row{display:flex; gap:8px; overflow-x:auto; margin-top:14px; padding-bottom:4px;}
+  .filter-chip{
+    flex-shrink:0; padding:8px 14px; border-radius:999px; font-size:12.5px; font-weight:600;
+    border:1px solid var(--surface-border); background:var(--surface); color:var(--muted); cursor:pointer;
+  }
+  .filter-chip.active{background:rgba(91,110,245,0.16); border-color:rgba(91,110,245,0.4); color:var(--indigo-soft);}
+
+  .activity-list{display:flex; flex-direction:column; gap:8px; margin-top:16px;}
+  .activity-item{
+    display:flex; justify-content:space-between; align-items:center;
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:14px; padding:14px;
+  }
+  .activity-left{display:flex; gap:12px; align-items:center;}
+  .activity-ic{width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0;}
+  .activity-title{font-size:13.5px; font-weight:600;}
+  .activity-sub{color:var(--muted); font-size:11px; margin-top:2px;}
+  .activity-amt{font-family:'Sora'; font-weight:700; font-size:14px; text-align:right;}
+  .activity-amt.in{color:var(--teal);}
+  .activity-amt.out{color:var(--danger);}
+  .activity-status{font-size:10.5px; color:var(--muted); margin-top:3px;}
+  .empty{color:var(--muted); font-size:13.5px; text-align:center; padding:30px 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="back" href="wallet.html">←</a>
+    <h1>Transaction History</h1>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="search-box">
+    <span>🔎</span>
+    <input id="searchInput" type="text" placeholder="Search by transaction ID">
+  </div>
+
+  <div class="filter-row" id="filterRow">
+    <div class="filter-chip active" data-type="all">All</div>
+    <div class="filter-chip" data-type="Deposit">Deposits</div>
+    <div class="filter-chip" data-type="Task Reward">Task Rewards</div>
+    <div class="filter-chip" data-type="Withdrawal">Withdrawals</div>
+    <div class="filter-chip" data-type="Referral Commission">Referrals</div>
+    <div class="filter-chip" data-type="Subscription">Subscription</div>
+  </div>
+
+  <div class="activity-list" id="activityList">
+    <div class="empty">Loading...</div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK'); }
+
+  const typeMeta = {
+    'Task Reward': { ic: '✅', sign: 'in' },
+    'Deposit': { ic: '💳', sign: 'in' },
+    'Withdrawal': { ic: '📤', sign: 'out' },
+    'Referral Commission': { ic: '🔗', sign: 'in' },
+    'Subscription': { ic: '⭐', sign: 'out' },
+    'Adjustment': { ic: '⚙️', sign: 'in' }
+  };
+
+  let allTx = [];
+  let currentFilter = 'all';
+
+  function render() {
+    const listEl = document.getElementById('activityList');
+    const searchVal = document.getElementById('searchInput').value.trim().toLowerCase();
+    let rows = currentFilter === 'all' ? allTx : allTx.filter(t => t.type === currentFilter);
+    if (searchVal) {
+      rows = rows.filter(t => (t.transactionId || '').toLowerCase().includes(searchVal));
+    }
+    if (rows.length === 0) {
+      listEl.innerHTML = '<div class="empty">No transactions found.</div>';
+      return;
+    }
+    listEl.innerHTML = '';
+    rows.forEach(t => {
+      const meta = typeMeta[t.type] || { ic: '💠', sign: 'in' };
+      const dateStr = t.createdAt
+        ? t.createdAt.toDate().toLocaleString('en-PK', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : '';
+      const item = document.createElement('div');
+      item.className = 'activity-item';
+      item.innerHTML = `
+        <div class="activity-left">
+          <div class="activity-ic">${meta.ic}</div>
+          <div>
+            <div class="activity-title">${t.type}</div>
+            <div class="activity-sub">${t.transactionId || ''} · ${dateStr}</div>
+          </div>
+        </div>
+        <div>
+          <div class="activity-amt ${meta.sign}">${meta.sign === 'in' ? '+' : '-'} ${fmt(t.amount)}</div>
+          <div class="activity-status">${t.status || ''}</div>
+        </div>
+      `;
+      listEl.appendChild(item);
+    });
+  }
+
+  document.getElementById('filterRow').addEventListener('click', (e) => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentFilter = chip.dataset.type;
+    render();
+  });
+
+  document.getElementById('searchInput').addEventListener('input', render);
+
+  requireAuth(async (user) => {
+    try {
+      const txQuery = await db.collection(COL.transactions)
+        .where('userId', '==', user.uid).orderBy('createdAt', 'desc').limit(200).get();
+      allTx = txQuery.docs.map(d => d.data());
+      render();
+    } catch (err) {
+      console.error(err);
+      document.getElementById('activityList').innerHTML = '<div class="empty">Something went wrong. Please try again.</div>';
+    }
+  });
+</script>
+</body>
+</html>

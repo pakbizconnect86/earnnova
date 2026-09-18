@@ -1,0 +1,241 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===================== EXISTING APPS (unchanged) =====================
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+      match /coinHistory/{entryId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+    match /posts/{postId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /messages/{messageId} {
+      allow read, write: if request.auth != null;
+    }
+    match /notifications/{notifId} {
+      allow read, write: if request.auth != null;
+    }
+    match /sponsoredTasks/{taskId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /proRequests/{reqId} {
+      allow read, write: if request.auth != null;
+    }
+    match /withdrawalRequests/{reqId} {
+      allow read, write: if request.auth != null;
+    }
+    match /reports/{reportId} {
+      allow read, write: if request.auth != null;
+    }
+    match /friendRequests/{reqId} {
+      allow read, write: if request.auth != null;
+    }
+    match /profiles/{profileId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /connections/{connId} {
+      allow read, write: if request.auth != null;
+    }
+    match /adda_rooms/{roomId} {
+      allow read, write: if true;
+      match /messages/{messageId} {
+        allow read, write: if true;
+      }
+      match /presence/{userId} {
+        allow read, write: if true;
+      }
+    }
+    match /adda_users/{userId} {
+      allow read, write: if true;
+    }
+    match /waclone_users/{userId} {
+      allow read, write: if request.auth != null;
+    }
+    match /waclone_chats/{chatId} {
+      allow read, write: if request.auth != null;
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+    match /waclone_status/{statusId} {
+      allow read, write: if request.auth != null;
+    }
+    match /ttnet_packages/{pkgId} {
+      allow read, write: if true;
+    }
+    match /ttnet_customers/{custId} {
+      allow read, write: if true;
+    }
+    match /ttnet_slips/{slipId} {
+      allow read, write: if true;
+    }
+    match /ttnet_meta/{docId} {
+      allow read, write: if true;
+    }
+
+    // ===================== VANTORA CAPITAL (pft_*) =====================
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/pft_admin_users/$(request.auth.uid));
+    }
+
+    match /pft_users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) || isAdmin();
+      allow delete: if false;
+    }
+
+    match /pft_challenge_accounts/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() ||
+        (isSignedIn() && resource.data.userId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['status']));
+      allow delete: if false;
+    }
+
+    match /pft_mt5_accounts/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /pft_mt5_positions/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /pft_mt5_trades/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isSignedIn();
+    }
+
+    match /pft_challenge_rules/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /pft_rule_violations/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /pft_account_events/{id} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+
+    match /pft_notifications/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    match /pft_admin_users/{uid} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /pft_audit_logs/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /pft_support_tickets/{id} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
+    }
+
+    match /pft_settings/{id} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ===================== EARNNOVA (earnnova_*) =====================
+    function enIsSignedIn() { return request.auth != null; }
+    function enIsOwner(uid) { return enIsSignedIn() && request.auth.uid == uid; }
+    function enIsAdmin() {
+      return enIsSignedIn() &&
+        get(/databases/$(database)/documents/earnnova_users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /earnnova_users/{uid} {
+      allow read: if true;
+      allow create: if enIsOwner(uid);
+      allow update: if enIsOwner(uid) || enIsAdmin();
+      allow delete: if false;
+    }
+
+    match /earnnova_wallets/{uid} {
+      allow read: if enIsOwner(uid) || enIsAdmin();
+      allow create: if enIsOwner(uid);
+      allow update: if enIsAdmin();
+      allow delete: if false;
+    }
+
+    match /earnnova_transactions/{id} {
+      allow read: if enIsSignedIn() && (resource.data.userId == request.auth.uid || enIsAdmin());
+      allow create: if enIsAdmin();
+      allow update, delete: if false;
+    }
+
+    match /earnnova_tasks/{id} {
+      allow read: if true;
+      allow write: if enIsAdmin();
+    }
+
+    match /earnnova_task_submissions/{id} {
+      allow read: if enIsSignedIn() && (resource.data.userId == request.auth.uid || enIsAdmin());
+      allow create: if enIsSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if enIsAdmin();
+    }
+
+    match /earnnova_deposits/{id} {
+      allow read: if enIsSignedIn() && (resource.data.userId == request.auth.uid || enIsAdmin());
+      allow create: if enIsSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if enIsAdmin();
+    }
+
+    match /earnnova_withdrawals/{id} {
+      allow read: if enIsSignedIn() && (resource.data.userId == request.auth.uid || enIsAdmin());
+      allow create: if enIsSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if enIsAdmin();
+    }
+
+    match /earnnova_subscription_plans/{id} {
+      allow read: if true;
+      allow write: if enIsAdmin();
+    }
+
+    match /earnnova_subscriptions/{id} {
+      allow read: if enIsSignedIn() && (resource.data.userId == request.auth.uid || enIsAdmin());
+      allow write: if enIsAdmin();
+    }
+
+    match /earnnova_referrals/{id} {
+      allow read: if enIsSignedIn();
+      allow create: if enIsSignedIn();
+      allow update: if enIsAdmin();
+    }
+
+    match /earnnova_notifications/{id} {
+      allow read: if enIsSignedIn() && resource.data.userId == request.auth.uid;
+      allow write: if enIsAdmin();
+    }
+
+    match /earnnova_support_tickets/{id} {
+      allow read: if enIsSignedIn() && (resource.data.userId == request.auth.uid || enIsAdmin());
+      allow create: if enIsSignedIn();
+      allow update: if enIsAdmin();
+    }
+
+    match /earnnova_admin_logs/{id} {
+      allow read, write: if enIsAdmin();
+    }
+
+    match /earnnova_settings/{id} {
+      allow read: if true;
+      allow write: if enIsAdmin();
+    }
+  }
+}

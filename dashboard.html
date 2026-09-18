@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — EarnNova</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:80px;
+  }
+  h1,h2,h3,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:760px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; justify-content:space-between; padding:14px 18px; max-width:760px; margin:0 auto;}
+  .brand{font-weight:700; font-size:18px;}
+  .brand span{color:var(--indigo-soft);}
+  .bell{
+    width:38px; height:38px; border-radius:11px; background:var(--surface); border:1px solid var(--surface-border);
+    display:flex; align-items:center; justify-content:center; position:relative; font-size:16px;
+  }
+  .bell .dot{position:absolute; top:8px; right:9px; width:7px; height:7px; border-radius:50%; background:var(--danger);}
+
+  .greet{padding:22px 0 6px;}
+  .greet h1{font-size:21px; font-weight:700;}
+  .greet p{color:var(--muted); font-size:13.5px; margin-top:4px;}
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px; margin-top:10px; padding:6px 12px;
+    border-radius:999px; background:rgba(34,211,184,0.12); color:var(--teal); font-size:12.5px; font-weight:600;
+  }
+  .status-pill .d{width:6px; height:6px; border-radius:50%; background:var(--teal);}
+
+  .main-cards{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:18px;}
+  .main-card{
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:18px;
+  }
+  .main-card.wide{grid-column:span 2; background:linear-gradient(135deg, rgba(91,110,245,0.16), rgba(91,110,245,0.04)); border-color:rgba(91,110,245,0.3);}
+  .main-card .label{color:var(--muted); font-size:12.5px;}
+  .main-card .value{font-family:'Sora'; font-size:24px; font-weight:700; margin-top:6px;}
+  .main-card.wide .value{font-size:30px;}
+
+  .sub-cards{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:12px;}
+  .sub-card{
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:14px;
+    padding:12px 8px; text-align:center;
+  }
+  .sub-card .v{font-family:'Sora'; font-size:16px; font-weight:700;}
+  .sub-card .l{color:var(--muted); font-size:10.5px; margin-top:4px; line-height:1.3;}
+
+  .quick-actions{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:20px;}
+  .qa{
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:14px;
+    padding:14px 6px; text-align:center; font-size:12px; font-weight:600;
+  }
+  .qa .ic{
+    width:34px; height:34px; margin:0 auto 8px; border-radius:10px;
+    background:rgba(91,110,245,0.14); display:flex; align-items:center; justify-content:center; font-size:15px;
+  }
+
+  .section-head{display:flex; justify-content:space-between; align-items:center; margin-top:26px; margin-bottom:12px;}
+  .section-head h2{font-size:16.5px; font-weight:700;}
+  .section-head a{color:var(--indigo-soft); font-size:13px; font-weight:600;}
+
+  .activity-list{display:flex; flex-direction:column; gap:8px;}
+  .activity-item{
+    display:flex; justify-content:space-between; align-items:center;
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:14px; padding:14px;
+  }
+  .activity-left{display:flex; gap:12px; align-items:center;}
+  .activity-ic{width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0;}
+  .activity-title{font-size:13.5px; font-weight:600;}
+  .activity-sub{color:var(--muted); font-size:11.5px; margin-top:2px;}
+  .activity-amt{font-family:'Sora'; font-weight:700; font-size:14px;}
+  .activity-amt.in{color:var(--teal);}
+  .activity-amt.out{color:var(--danger);}
+  .empty{color:var(--muted); font-size:13.5px; text-align:center; padding:26px 0;}
+
+  .bottom-nav{
+    position:fixed; bottom:0; left:0; right:0; z-index:60;
+    display:flex; justify-content:space-around; align-items:center;
+    background:rgba(10,14,31,0.92); backdrop-filter:blur(14px);
+    border-top:1px solid var(--surface-border); padding:10px 0 14px;
+  }
+  .bottom-nav a{font-size:11px; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .bottom-nav a.active{color:var(--indigo-soft);}
+  .bottom-nav .ic{width:20px; height:20px; border-radius:6px; background:rgba(255,255,255,0.08);}
+
+  @media(min-width:640px){
+    .main-cards{grid-template-columns:repeat(4,1fr);}
+    .main-card.wide{grid-column:span 4;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <div class="brand">Earn<span>Nova</span></div>
+    <a class="bell" href="notifications.html">🔔<span class="dot" id="notifDot" style="display:none;"></span></a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="greet">
+    <h1 id="greetName">Welcome back 👋</h1>
+    <p id="greetSub">Here's where your account stands today.</p>
+    <div class="status-pill"><span class="d"></span> <span id="statusText">Active</span></div>
+  </div>
+
+  <div class="main-cards">
+    <div class="main-card wide">
+      <div class="label">Available Balance</div>
+      <div class="value" id="availBal">PKR 0</div>
+    </div>
+    <div class="main-card"><div class="label">Pending Earnings</div><div class="value" id="pendingEarn">PKR 0</div></div>
+    <div class="main-card"><div class="label">Total Earned</div><div class="value" id="totalEarn">PKR 0</div></div>
+    <div class="main-card"><div class="label">Total Withdrawn</div><div class="value" id="totalWithdrawn">PKR 0</div></div>
+    <div class="main-card"><div class="label">Withdrawal Pending</div><div class="value" id="withdrawPending">PKR 0</div></div>
+  </div>
+
+  <div class="sub-cards">
+    <div class="sub-card"><div class="v" id="completedTasks">0</div><div class="l">Completed Tasks</div></div>
+    <div class="sub-card"><div class="v" id="pendingTasks">0</div><div class="l">Pending Tasks</div></div>
+    <div class="sub-card"><div class="v" id="activePlan">—</div><div class="l">Active Plan</div></div>
+    <div class="sub-card"><div class="v" id="totalReferrals">0</div><div class="l">Total Referrals</div></div>
+  </div>
+
+  <div class="quick-actions">
+    <a class="qa" href="tasks.html"><div class="ic">💼</div>Earn Now</a>
+    <a class="qa" href="deposit.html"><div class="ic">💳</div>Deposit</a>
+    <a class="qa" href="withdraw.html"><div class="ic">📤</div>Withdraw</a>
+    <a class="qa" href="referrals.html"><div class="ic">🔗</div>Refer</a>
+  </div>
+
+  <div class="section-head">
+    <h2>Recent Activity</h2>
+    <a href="transactions.html">See all</a>
+  </div>
+  <div class="activity-list" id="activityList">
+    <div class="empty">Loading...</div>
+  </div>
+
+</div>
+
+<nav class="bottom-nav">
+  <a href="dashboard.html" class="active"><div class="ic"></div>Home</a>
+  <a href="tasks.html"><div class="ic"></div>Earn</a>
+  <a href="wallet.html"><div class="ic"></div>Wallet</a>
+  <a href="referrals.html"><div class="ic"></div>Referrals</a>
+  <a href="profile.html"><div class="ic"></div>Profile</a>
+</nav>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK'); }
+
+  const typeMeta = {
+    'Task Reward': { ic: '✅', sign: 'in' },
+    'Deposit': { ic: '💳', sign: 'in' },
+    'Withdrawal': { ic: '📤', sign: 'out' },
+    'Referral Commission': { ic: '🔗', sign: 'in' },
+    'Subscription': { ic: '⭐', sign: 'out' },
+    'Adjustment': { ic: '⚙️', sign: 'in' }
+  };
+
+  requireAuth(async (user) => {
+    try {
+      const userDoc = await db.collection(COL.users).doc(user.uid).get();
+      const u = userDoc.data() || {};
+      document.getElementById('greetName').textContent = `Welcome back, ${u.fullName || 'there'} 👋`;
+      document.getElementById('statusText').textContent = u.status || 'Active';
+
+      const walletDoc = await db.collection(COL.wallets).doc(user.uid).get();
+      const w = walletDoc.data() || {};
+      document.getElementById('availBal').textContent = fmt(w.availableBalance);
+      document.getElementById('pendingEarn').textContent = fmt(w.pendingEarnings);
+      document.getElementById('totalEarn').textContent = fmt(w.totalEarned);
+      document.getElementById('totalWithdrawn').textContent = fmt(w.totalWithdrawn);
+      document.getElementById('withdrawPending').textContent = fmt(w.withdrawalPending);
+
+      // Task counts
+      const [approvedSubs, pendingSubs] = await Promise.all([
+        db.collection(COL.submissions).where('userId', '==', user.uid).where('status', '==', 'Approved').get(),
+        db.collection(COL.submissions).where('userId', '==', user.uid)
+          .where('status', 'in', ['Submitted', 'Under Review']).get()
+      ]);
+      document.getElementById('completedTasks').textContent = approvedSubs.size;
+      document.getElementById('pendingTasks').textContent = pendingSubs.size;
+
+      // Active subscription
+      const subQuery = await db.collection(COL.subscriptions)
+        .where('userId', '==', user.uid).where('status', '==', 'Active').limit(1).get();
+      if (!subQuery.empty) {
+        document.getElementById('activePlan').textContent = subQuery.docs[0].data().planName || 'Active';
+      }
+
+      // Referrals
+      const refQuery = await db.collection(COL.referrals).where('referrerUid', '==', user.uid).get();
+      document.getElementById('totalReferrals').textContent = refQuery.size;
+
+      // Notification badge
+      const unread = await db.collection(COL.notifications)
+        .where('userId', '==', user.uid).where('read', '==', false).limit(1).get();
+      if (!unread.empty) document.getElementById('notifDot').style.display = 'block';
+
+      // Recent activity (last 5 transactions)
+      const txQuery = await db.collection(COL.transactions)
+        .where('userId', '==', user.uid).orderBy('createdAt', 'desc').limit(5).get();
+
+      const listEl = document.getElementById('activityList');
+      if (txQuery.empty) {
+        listEl.innerHTML = '<div class="empty">No transactions yet.</div>';
+      } else {
+        listEl.innerHTML = '';
+        txQuery.forEach(doc => {
+          const t = doc.data();
+          const meta = typeMeta[t.type] || { ic: '💠', sign: 'in' };
+          const dateStr = t.createdAt ? t.createdAt.toDate().toLocaleDateString('en-PK', { day: 'numeric', month: 'short' }) : '';
+          const item = document.createElement('div');
+          item.className = 'activity-item';
+          item.innerHTML = `
+            <div class="activity-left">
+              <div class="activity-ic">${meta.ic}</div>
+              <div>
+                <div class="activity-title">${t.type}</div>
+                <div class="activity-sub">${t.status || ''} · ${dateStr}</div>
+              </div>
+            </div>
+            <div class="activity-amt ${meta.sign}">${meta.sign === 'in' ? '+' : '-'} ${fmt(t.amount)}</div>
+          `;
+          listEl.appendChild(item);
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      document.getElementById('activityList').innerHTML = '<div class="empty">Something went wrong. Please try again.</div>';
+    }
+  });
+</script>
+</body>
+</html>
