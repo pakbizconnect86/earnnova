@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deposit Requests — EarnNova Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:40px;
+  }
+  h1,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:700px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; gap:14px; padding:14px 18px; max-width:700px; margin:0 auto;}
+  .back{font-size:18px;}
+  .nav h1{font-size:16px; font-weight:700;}
+
+  .filter-row{display:flex; gap:8px; overflow-x:auto; margin-top:16px; padding-bottom:4px;}
+  .filter-chip{
+    flex-shrink:0; padding:8px 14px; border-radius:999px; font-size:12.5px; font-weight:600;
+    border:1px solid var(--surface-border); background:var(--surface); color:var(--muted); cursor:pointer;
+  }
+  .filter-chip.active{background:rgba(91,110,245,0.16); border-color:rgba(91,110,245,0.4); color:var(--indigo-soft);}
+
+  .list{display:flex; flex-direction:column; gap:10px; margin-top:16px;}
+  .item{background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:16px;}
+  .item-top{display:flex; justify-content:space-between; align-items:flex-start;}
+  .item-amt{font-family:'Sora'; font-weight:800; font-size:18px; color:var(--teal);}
+  .item-method{font-size:11.5px; color:var(--indigo-soft); font-weight:600; margin-top:2px;}
+  .item-status{padding:4px 10px; border-radius:999px; font-size:10.5px; font-weight:700;}
+  .item-status.Pending_Verification{background:rgba(91,110,245,0.14); color:var(--indigo-soft);}
+  .item-status.Approved{background:rgba(34,211,184,0.14); color:var(--teal);}
+  .item-status.Rejected{background:rgba(242,107,107,0.14); color:var(--danger);}
+
+  .detail-grid{margin-top:12px; display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--muted);}
+  .detail-grid b{color:var(--text);}
+
+  .action-row{display:flex; gap:10px; margin-top:14px;}
+  .action-row button{
+    flex:1; padding:11px; border:none; border-radius:11px; font-weight:600; font-size:13px; cursor:pointer;
+  }
+  .btn-approve{background:linear-gradient(135deg, var(--teal), #0E7A38); color:#fff;}
+  .btn-reject{background:rgba(242,107,107,0.14); border:1px solid rgba(242,107,107,0.3) !important; color:var(--danger);}
+  .btn-approve:disabled, .btn-reject:disabled{opacity:0.5;}
+
+  .empty{color:var(--muted); font-size:13.5px; text-align:center; padding:36px 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="back" href="dashboard.html">←</a>
+    <h1>Deposit Requests</h1>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filter-row" id="filterRow">
+    <div class="filter-chip active" data-status="Pending Verification">Pending</div>
+    <div class="filter-chip" data-status="Approved">Approved</div>
+    <div class="filter-chip" data-status="Rejected">Rejected</div>
+    <div class="filter-chip" data-status="all">All</div>
+  </div>
+  <div class="list" id="list">
+    <div class="empty">Loading...</div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script>
+  function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK'); }
+  let allDeposits = [];
+  let adminUid = null;
+
+  function render(status) {
+    const listEl = document.getElementById('list');
+    const rows = status === 'all' ? allDeposits : allDeposits.filter(d => d.data.status === status);
+    if (rows.length === 0) {
+      listEl.innerHTML = '<div class="empty">No deposit requests here.</div>';
+      return;
+    }
+    listEl.innerHTML = '';
+    rows.forEach(({ id, data: d }) => {
+      const dateStr = d.createdAt ? d.createdAt.toDate().toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+      const statusClass = (d.status || '').replace(/ /g, '_');
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `
+        <div class="item-top">
+          <div>
+            <div class="item-amt">${fmt(d.amount)}</div>
+            <div class="item-method">${d.method}</div>
+          </div>
+          <span class="item-status ${statusClass}">${d.status}</span>
+        </div>
+        <div class="detail-grid">
+          <div>User: <b>${d.userName || d.userId}</b></div>
+          <div>Deposit ID: <b>${d.depositId}</b></div>
+          <div>Transaction ID: <b>${d.transactionId}</b></div>
+          <div>Submitted: <b>${dateStr}</b></div>
+        </div>
+        ${d.status === 'Pending Verification' ? `
+        <div class="action-row">
+          <button class="btn-approve" data-action="approve" data-id="${id}">Approve Deposit</button>
+          <button class="btn-reject" data-action="reject" data-id="${id}">Reject</button>
+        </div>` : ''}
+      `;
+      listEl.appendChild(item);
+    });
+  }
+
+  document.getElementById('filterRow').addEventListener('click', (e) => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    render(chip.dataset.status);
+  });
+
+  document.getElementById('list').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    const dep = allDeposits.find(d => d.id === id);
+    if (!dep) return;
+
+    if (action === 'approve') {
+      if (!confirm(`Confirm that this payment of ${fmt(dep.data.amount)} has been manually verified.`)) return;
+    } else {
+      const reason = prompt('Reason for rejection:');
+      if (reason === null) return;
+      dep.rejectionReason = reason || 'Not specified';
+    }
+
+    btn.disabled = true;
+    btn.textContent = action === 'approve' ? 'Approving...' : 'Rejecting...';
+
+    try {
+      const walletRef = db.collection(COL.wallets).doc(dep.data.userId);
+      const walletDoc = await walletRef.get();
+      const w = walletDoc.data() || { availableBalance: 0 };
+
+      if (action === 'approve') {
+        const newBalance = (w.availableBalance || 0) + dep.data.amount;
+        await walletRef.update({ availableBalance: newBalance, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+        await db.collection(COL.transactions).add({
+          transactionId: generateRefId('TX'),
+          userId: dep.data.userId,
+          type: 'Deposit',
+          amount: dep.data.amount,
+          previousBalance: w.availableBalance || 0,
+          newBalance,
+          reference: dep.data.depositId,
+          status: 'Approved',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: adminUid
+        });
+
+        await db.collection(COL.deposits).doc(id).update({ status: 'Approved', approvedBy: adminUid, approvedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+        await db.collection(COL.notifications).add({
+          userId: dep.data.userId, title: 'Deposit approved',
+          message: `Your deposit of ${fmt(dep.data.amount)} has been approved and added to your balance.`,
+          read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else {
+        await db.collection(COL.deposits).doc(id).update({ status: 'Rejected', rejectionReason: dep.rejectionReason, reviewedBy: adminUid, reviewedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+        await db.collection(COL.notifications).add({
+          userId: dep.data.userId, title: 'Deposit rejected',
+          message: `Your deposit of ${fmt(dep.data.amount)} was rejected. Reason: ${dep.rejectionReason}`,
+          read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      await db.collection(COL.adminLogs).add({
+        adminId: adminUid, action: action === 'approve' ? 'Deposit approved' : 'Deposit rejected',
+        targetUserId: dep.data.userId, amount: dep.data.amount, reference: dep.data.depositId,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      location.reload();
+    } catch (err) {
+      console.error(err);
+      alert('Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.textContent = action === 'approve' ? 'Approve Deposit' : 'Reject';
+    }
+  });
+
+  requireAdmin(async (user) => {
+    adminUid = user.uid;
+    try {
+      const depSnap = await db.collection(COL.deposits).orderBy('createdAt', 'desc').get();
+      allDeposits = [];
+      for (const doc of depSnap.docs) {
+        const d = doc.data();
+        const userDoc = await db.collection(COL.users).doc(d.userId).get();
+        d.userName = userDoc.exists ? userDoc.data().fullName : d.userId;
+        allDeposits.push({ id: doc.id, data: d });
+      }
+      render('Pending Verification');
+    } catch (err) {
+      console.error(err);
+      document.getElementById('list').innerHTML = '<div class="empty">Something went wrong. Please try again.</div>';
+    }
+  });
+</script>
+</body>
+</html>

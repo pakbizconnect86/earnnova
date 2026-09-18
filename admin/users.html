@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Users — EarnNova Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:40px;
+  }
+  h1,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:700px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; gap:14px; padding:14px 18px; max-width:700px; margin:0 auto;}
+  .back{font-size:18px;}
+  .nav h1{font-size:16px; font-weight:700;}
+
+  .search-box{
+    margin-top:16px; display:flex; align-items:center; gap:8px;
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:14px; padding:12px 14px;
+  }
+  .search-box input{background:none; border:none; outline:none; color:var(--text); font-size:14px; flex:1;}
+  .search-box input::placeholder{color:var(--muted);}
+
+  .list{display:flex; flex-direction:column; gap:8px; margin-top:16px;}
+  .item{background:var(--surface); border:1px solid var(--surface-border); border-radius:14px; padding:14px;}
+  .item-top{display:flex; justify-content:space-between; align-items:flex-start;}
+  .item-name{font-size:13.5px; font-weight:700;}
+  .item-sub{color:var(--muted); font-size:11px; margin-top:3px;}
+  .status-pill{font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:999px;}
+  .status-pill.Active{background:rgba(34,211,184,0.14); color:var(--teal);}
+  .status-pill.Suspended{background:rgba(242,107,107,0.14); color:var(--danger);}
+  .toggle-btn{margin-top:10px; width:100%; padding:9px; border-radius:10px; font-size:12px; font-weight:600; border:1px solid var(--surface-border); background:rgba(255,255,255,0.05);}
+  .empty{color:var(--muted); font-size:13.5px; text-align:center; padding:30px 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="back" href="dashboard.html">←</a>
+    <h1>Users</h1>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="search-box">
+    <span>🔎</span>
+    <input id="searchInput" type="text" placeholder="Search by name, email or user ID">
+  </div>
+  <div class="list" id="list">
+    <div class="empty">Loading...</div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script>
+  let allUsers = [];
+  let adminUid = null;
+
+  function render() {
+    const listEl = document.getElementById('list');
+    const searchVal = document.getElementById('searchInput').value.trim().toLowerCase();
+    let rows = allUsers;
+    if (searchVal) {
+      rows = rows.filter(({ data: u }) =>
+        (u.fullName || '').toLowerCase().includes(searchVal) ||
+        (u.email || '').toLowerCase().includes(searchVal) ||
+        (u.userId || '').toLowerCase().includes(searchVal)
+      );
+    }
+    if (rows.length === 0) {
+      listEl.innerHTML = '<div class="empty">No users found.</div>';
+      return;
+    }
+    listEl.innerHTML = '';
+    rows.forEach(({ id, data: u }) => {
+      const isSuspended = u.status === 'Suspended';
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `
+        <div class="item-top">
+          <div>
+            <div class="item-name">${u.fullName || 'User'}</div>
+            <div class="item-sub">${u.userId} · ${u.email} · ${u.phone || ''}</div>
+          </div>
+          <span class="status-pill ${u.status}">${u.status || 'Active'}</span>
+        </div>
+        ${u.role === 'admin' ? '' : `<button class="toggle-btn" data-id="${id}" data-current="${u.status || 'Active'}">${isSuspended ? 'Activate Account' : 'Suspend Account'}</button>`}
+      `;
+      listEl.appendChild(item);
+    });
+  }
+
+  document.getElementById('searchInput').addEventListener('input', render);
+
+  document.getElementById('list').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.toggle-btn');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const current = btn.dataset.current;
+    const newStatus = current === 'Suspended' ? 'Active' : 'Suspended';
+
+    if (!confirm(`Set this account to "${newStatus}"?`)) return;
+    btn.disabled = true;
+
+    try {
+      await db.collection(COL.users).doc(id).update({ status: newStatus });
+      await db.collection(COL.adminLogs).add({
+        adminId: adminUid, action: newStatus === 'Suspended' ? 'User suspended' : 'User activated',
+        targetUserId: id, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      location.reload();
+    } catch (err) {
+      console.error(err);
+      alert('Something went wrong. Please try again.');
+      btn.disabled = false;
+    }
+  });
+
+  requireAdmin(async (user) => {
+    adminUid = user.uid;
+    try {
+      const snap = await db.collection(COL.users).orderBy('createdAt', 'desc').get();
+      allUsers = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+      render();
+    } catch (err) {
+      console.error(err);
+      document.getElementById('list').innerHTML = '<div class="empty">Something went wrong. Please try again.</div>';
+    }
+  });
+</script>
+</body>
+</html>

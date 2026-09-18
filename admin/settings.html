@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platform Settings — EarnNova Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:50px;
+  }
+  h1,h2,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:560px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; gap:14px; padding:14px 18px; max-width:560px; margin:0 auto;}
+  .back{font-size:18px;}
+  .nav h1{font-size:16px; font-weight:700;}
+
+  .card{background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:20px; margin-top:18px;}
+  .card h2{font-size:14.5px; font-weight:700; margin-bottom:14px;}
+  .pay-tabs{display:flex; gap:8px; margin-bottom:16px;}
+  .pay-tab{
+    flex:1; text-align:center; padding:9px; border-radius:11px; font-size:12.5px; font-weight:600; cursor:pointer;
+    border:1px solid var(--surface-border); background:rgba(255,255,255,0.03); color:var(--muted);
+  }
+  .pay-tab.active{background:rgba(91,110,245,0.16); border-color:rgba(91,110,245,0.4); color:var(--indigo-soft);}
+
+  label{font-size:12.5px; color:var(--muted); display:block; margin-bottom:6px; margin-top:12px;}
+  input{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--surface-border);
+    border-radius:12px; padding:12px 14px; color:var(--text); font-size:14px; outline:none;
+  }
+  input:focus{border-color:var(--indigo-soft);}
+
+  .pay-fields{display:none;}
+  .pay-fields.active{display:block;}
+
+  button{
+    width:100%; margin-top:18px; padding:13px; border:none; border-radius:13px; font-weight:600; font-size:14.5px;
+    background:linear-gradient(135deg, var(--indigo), #4756D8); color:#fff; cursor:pointer;
+  }
+  button:disabled{opacity:0.6;}
+  .msg{font-size:12.5px; margin-top:10px; text-align:center; min-height:16px;}
+  .msg.ok{color:var(--teal);}
+  .msg.err{color:var(--danger);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="back" href="dashboard.html">←</a>
+    <h1>Platform Settings</h1>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>Payment details (shown to users on deposit)</h2>
+    <div class="pay-tabs" id="payTabs">
+      <div class="pay-tab active" data-tab="JazzCash">JazzCash</div>
+      <div class="pay-tab" data-tab="Easypaisa">Easypaisa</div>
+      <div class="pay-tab" data-tab="Bank Transfer">Bank</div>
+    </div>
+
+    <div class="pay-fields active" id="fields-JazzCash">
+      <label>Account Title</label>
+      <input id="jc-title" placeholder="e.g. EarnNova Payments">
+      <label>JazzCash Number</label>
+      <input id="jc-number" placeholder="03XX-XXXXXXX">
+    </div>
+
+    <div class="pay-fields" id="fields-Easypaisa">
+      <label>Account Title</label>
+      <input id="ep-title" placeholder="e.g. EarnNova Payments">
+      <label>Easypaisa Number</label>
+      <input id="ep-number" placeholder="03XX-XXXXXXX">
+    </div>
+
+    <div class="pay-fields" id="fields-Bank Transfer">
+      <label>Account Title</label>
+      <input id="bank-title" placeholder="e.g. EarnNova Payments">
+      <label>Bank Name</label>
+      <input id="bank-name" placeholder="e.g. Meezan Bank">
+      <label>Account Number / IBAN</label>
+      <input id="bank-number" placeholder="Account number or IBAN">
+    </div>
+
+    <button id="savePayment">Save Payment Details</button>
+    <div class="msg" id="payMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Platform limits</h2>
+    <label>Minimum Deposit (PKR)</label>
+    <input id="minDeposit" type="number" min="1" placeholder="e.g. 100">
+    <label>Minimum Withdrawal (PKR)</label>
+    <input id="minWithdrawal" type="number" min="1" placeholder="e.g. 500">
+    <button id="saveLimits">Save Limits</button>
+    <div class="msg" id="limitsMsg"></div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script>
+  document.getElementById('payTabs').addEventListener('click', (e) => {
+    const tab = e.target.closest('.pay-tab');
+    if (!tab) return;
+    document.querySelectorAll('.pay-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.pay-fields').forEach(f => f.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('fields-' + tab.dataset.tab).classList.add('active');
+  });
+
+  document.getElementById('savePayment').addEventListener('click', async () => {
+    const msg = document.getElementById('payMsg');
+    const btn = document.getElementById('savePayment');
+    btn.disabled = true;
+    msg.textContent = '';
+
+    const payload = {
+      'JazzCash': {
+        'Account Title': document.getElementById('jc-title').value.trim() || 'EarnNova Payments',
+        'JazzCash Number': document.getElementById('jc-number').value.trim()
+      },
+      'Easypaisa': {
+        'Account Title': document.getElementById('ep-title').value.trim() || 'EarnNova Payments',
+        'Easypaisa Number': document.getElementById('ep-number').value.trim()
+      },
+      'Bank Transfer': {
+        'Account Title': document.getElementById('bank-title').value.trim() || 'EarnNova Payments',
+        'Bank Name': document.getElementById('bank-name').value.trim(),
+        'Account Number': document.getElementById('bank-number').value.trim()
+      }
+    };
+
+    try {
+      await db.collection(COL.settings).doc('payment').set(payload, { merge: true });
+      msg.textContent = 'Payment details saved.';
+      msg.className = 'msg ok';
+    } catch (err) {
+      console.error(err);
+      msg.textContent = 'Failed to save. Please try again.';
+      msg.className = 'msg err';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('saveLimits').addEventListener('click', async () => {
+    const msg = document.getElementById('limitsMsg');
+    const btn = document.getElementById('saveLimits');
+    const minDeposit = parseFloat(document.getElementById('minDeposit').value);
+    const minWithdrawal = parseFloat(document.getElementById('minWithdrawal').value);
+
+    if (!minDeposit || minDeposit <= 0) { msg.textContent = 'Enter a valid minimum deposit.'; msg.className = 'msg err'; return; }
+    if (!minWithdrawal || minWithdrawal <= 0) { msg.textContent = 'Enter a valid minimum withdrawal.'; msg.className = 'msg err'; return; }
+
+    btn.disabled = true;
+    msg.textContent = '';
+    try {
+      await db.collection(COL.settings).doc('deposit').set({ minDeposit }, { merge: true });
+      await db.collection(COL.settings).doc('withdrawal').set({ minWithdrawal }, { merge: true });
+      msg.textContent = 'Limits saved.';
+      msg.className = 'msg ok';
+    } catch (err) {
+      console.error(err);
+      msg.textContent = 'Failed to save. Please try again.';
+      msg.className = 'msg err';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  requireAdmin(async () => {
+    try {
+      const payDoc = await db.collection(COL.settings).doc('payment').get();
+      if (payDoc.exists) {
+        const d = payDoc.data();
+        if (d['JazzCash']) {
+          document.getElementById('jc-title').value = d['JazzCash']['Account Title'] || '';
+          document.getElementById('jc-number').value = d['JazzCash']['JazzCash Number'] || '';
+        }
+        if (d['Easypaisa']) {
+          document.getElementById('ep-title').value = d['Easypaisa']['Account Title'] || '';
+          document.getElementById('ep-number').value = d['Easypaisa']['Easypaisa Number'] || '';
+        }
+        if (d['Bank Transfer']) {
+          document.getElementById('bank-title').value = d['Bank Transfer']['Account Title'] || '';
+          document.getElementById('bank-name').value = d['Bank Transfer']['Bank Name'] || '';
+          document.getElementById('bank-number').value = d['Bank Transfer']['Account Number'] || '';
+        }
+      }
+
+      const depDoc = await db.collection(COL.settings).doc('deposit').get();
+      if (depDoc.exists && depDoc.data().minDeposit) document.getElementById('minDeposit').value = depDoc.data().minDeposit;
+
+      const wdDoc = await db.collection(COL.settings).doc('withdrawal').get();
+      if (wdDoc.exists && wdDoc.data().minWithdrawal) document.getElementById('minWithdrawal').value = wdDoc.data().minWithdrawal;
+    } catch (err) {
+      console.error(err);
+    }
+  });
+</script>
+</body>
+</html>

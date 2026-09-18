@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Withdrawal Requests — EarnNova Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:40px;
+  }
+  h1,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:700px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; gap:14px; padding:14px 18px; max-width:700px; margin:0 auto;}
+  .back{font-size:18px;}
+  .nav h1{font-size:16px; font-weight:700;}
+
+  .filter-row{display:flex; gap:8px; overflow-x:auto; margin-top:16px; padding-bottom:4px;}
+  .filter-chip{
+    flex-shrink:0; padding:8px 14px; border-radius:999px; font-size:12.5px; font-weight:600;
+    border:1px solid var(--surface-border); background:var(--surface); color:var(--muted); cursor:pointer;
+  }
+  .filter-chip.active{background:rgba(91,110,245,0.16); border-color:rgba(91,110,245,0.4); color:var(--indigo-soft);}
+
+  .list{display:flex; flex-direction:column; gap:10px; margin-top:16px;}
+  .item{background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:16px;}
+  .item-top{display:flex; justify-content:space-between; align-items:flex-start;}
+  .item-amt{font-family:'Sora'; font-weight:800; font-size:18px; color:var(--teal);}
+  .item-method{font-size:11.5px; color:var(--indigo-soft); font-weight:600; margin-top:2px;}
+  .item-status{padding:4px 10px; border-radius:999px; font-size:10.5px; font-weight:700;}
+  .item-status.Pending_Review{background:rgba(91,110,245,0.14); color:var(--indigo-soft);}
+  .item-status.Approved_·_Paid, .item-status.Approved{background:rgba(34,211,184,0.14); color:var(--teal);}
+  .item-status.Rejected{background:rgba(242,107,107,0.14); color:var(--danger);}
+
+  .detail-grid{margin-top:12px; display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--muted);}
+  .detail-grid b{color:var(--text);}
+
+  .ref-input{margin-top:12px;}
+  .ref-input input{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--surface-border);
+    border-radius:11px; padding:10px 12px; color:var(--text); font-size:13px; outline:none;
+  }
+
+  .action-row{display:flex; gap:10px; margin-top:12px;}
+  .action-row button{
+    flex:1; padding:11px; border:none; border-radius:11px; font-weight:600; font-size:12.5px; cursor:pointer;
+  }
+  .btn-paid{background:linear-gradient(135deg, var(--teal), #0E7A38); color:#fff;}
+  .btn-reject{background:rgba(242,107,107,0.14); border:1px solid rgba(242,107,107,0.3) !important; color:var(--danger);}
+  button:disabled{opacity:0.5;}
+
+  .empty{color:var(--muted); font-size:13.5px; text-align:center; padding:36px 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="back" href="dashboard.html">←</a>
+    <h1>Withdrawal Requests</h1>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filter-row" id="filterRow">
+    <div class="filter-chip active" data-status="Pending Review">Pending</div>
+    <div class="filter-chip" data-status="Approved / Paid">Paid</div>
+    <div class="filter-chip" data-status="Rejected">Rejected</div>
+    <div class="filter-chip" data-status="all">All</div>
+  </div>
+  <div class="list" id="list">
+    <div class="empty">Loading...</div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script>
+  function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK'); }
+  let allWithdrawals = [];
+  let adminUid = null;
+
+  function render(status) {
+    const listEl = document.getElementById('list');
+    const rows = status === 'all' ? allWithdrawals : allWithdrawals.filter(w => w.data.status === status);
+    if (rows.length === 0) {
+      listEl.innerHTML = '<div class="empty">No withdrawal requests here.</div>';
+      return;
+    }
+    listEl.innerHTML = '';
+    rows.forEach(({ id, data: w }) => {
+      const dateStr = w.createdAt ? w.createdAt.toDate().toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+      const statusClass = (w.status || '').replace(/ /g, '_');
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `
+        <div class="item-top">
+          <div>
+            <div class="item-amt">${fmt(w.amount)}</div>
+            <div class="item-method">${w.method}</div>
+          </div>
+          <span class="item-status ${statusClass}">${w.status}</span>
+        </div>
+        <div class="detail-grid">
+          <div>User: <b>${w.userName || w.userId}</b></div>
+          <div>Withdrawal ID: <b>${w.withdrawalId}</b></div>
+          <div>Account: <b>${w.accountHolderName} — ${w.accountNumber}</b></div>
+          <div>Requested: <b>${dateStr}</b></div>
+          ${w.paymentRef ? `<div>Payment Ref: <b>${w.paymentRef}</b></div>` : ''}
+        </div>
+        ${w.status === 'Pending Review' ? `
+        <div class="ref-input"><input placeholder="Payment reference / transaction ID" id="ref-${id}"></div>
+        <div class="action-row">
+          <button class="btn-paid" data-action="paid" data-id="${id}">Mark as Paid</button>
+          <button class="btn-reject" data-action="reject" data-id="${id}">Reject</button>
+        </div>` : ''}
+      `;
+      listEl.appendChild(item);
+    });
+  }
+
+  document.getElementById('filterRow').addEventListener('click', (e) => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    render(chip.dataset.status);
+  });
+
+  document.getElementById('list').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    const wd = allWithdrawals.find(w => w.id === id);
+    if (!wd) return;
+
+    let paymentRef = null;
+    if (action === 'paid') {
+      paymentRef = document.getElementById(`ref-${id}`).value.trim();
+      if (!paymentRef) { alert('Please enter the payment reference / transaction ID first.'); return; }
+      if (!confirm('I confirm that the payment has actually been sent.')) return;
+    } else {
+      const reason = prompt('Reason for rejection:');
+      if (reason === null) return;
+      wd.rejectionReason = reason || 'Not specified';
+    }
+
+    btn.disabled = true;
+    btn.textContent = action === 'paid' ? 'Processing...' : 'Rejecting...';
+
+    try {
+      if (action === 'paid') {
+        const walletRef = db.collection(COL.wallets).doc(wd.data.userId);
+        const walletDoc = await walletRef.get();
+        const w = walletDoc.data() || { availableBalance: 0, totalWithdrawn: 0 };
+
+        if (w.availableBalance < wd.data.amount) {
+          alert('User no longer has sufficient available balance for this withdrawal.');
+          btn.disabled = false;
+          btn.textContent = 'Mark as Paid';
+          return;
+        }
+
+        const newBalance = w.availableBalance - wd.data.amount;
+        const newTotalWithdrawn = (w.totalWithdrawn || 0) + wd.data.amount;
+        await walletRef.update({
+          availableBalance: newBalance,
+          totalWithdrawn: newTotalWithdrawn,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await db.collection(COL.transactions).add({
+          transactionId: generateRefId('TX'),
+          userId: wd.data.userId,
+          type: 'Withdrawal',
+          amount: wd.data.amount,
+          previousBalance: w.availableBalance,
+          newBalance,
+          reference: wd.data.withdrawalId,
+          status: 'Approved',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: adminUid
+        });
+
+        await db.collection(COL.withdrawals).doc(id).update({
+          status: 'Approved / Paid', paymentRef, approvedBy: adminUid, approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await db.collection(COL.notifications).add({
+          userId: wd.data.userId, title: 'Withdrawal completed',
+          message: `Your withdrawal of ${fmt(wd.data.amount)} has been marked as paid. Reference: ${paymentRef}`,
+          read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else {
+        await db.collection(COL.withdrawals).doc(id).update({
+          status: 'Rejected', rejectionReason: wd.rejectionReason, reviewedBy: adminUid, reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await db.collection(COL.notifications).add({
+          userId: wd.data.userId, title: 'Withdrawal rejected',
+          message: `Your withdrawal of ${fmt(wd.data.amount)} was rejected. Reason: ${wd.rejectionReason}`,
+          read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      await db.collection(COL.adminLogs).add({
+        adminId: adminUid, action: action === 'paid' ? 'Withdrawal marked paid' : 'Withdrawal rejected',
+        targetUserId: wd.data.userId, amount: wd.data.amount, reference: wd.data.withdrawalId,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      location.reload();
+    } catch (err) {
+      console.error(err);
+      alert('Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.textContent = action === 'paid' ? 'Mark as Paid' : 'Reject';
+    }
+  });
+
+  requireAdmin(async (user) => {
+    adminUid = user.uid;
+    try {
+      const wdSnap = await db.collection(COL.withdrawals).orderBy('createdAt', 'desc').get();
+      allWithdrawals = [];
+      for (const doc of wdSnap.docs) {
+        const w = doc.data();
+        const userDoc = await db.collection(COL.users).doc(w.userId).get();
+        w.userName = userDoc.exists ? userDoc.data().fullName : w.userId;
+        allWithdrawals.push({ id: doc.id, data: w });
+      }
+      render('Pending Review');
+    } catch (err) {
+      console.error(err);
+      document.getElementById('list').innerHTML = '<div class="empty">Something went wrong. Please try again.</div>';
+    }
+  });
+</script>
+</body>
+</html>
