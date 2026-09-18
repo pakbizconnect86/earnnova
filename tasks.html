@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Earn — EarnNova</title>
+<title>Earn Now — EarnNova</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -16,7 +16,7 @@
     background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
     color:var(--text); font-family:'Inter', sans-serif; padding-bottom:80px;
   }
-  h1,.brand{font-family:'Sora', sans-serif;}
+  h1,h2,.brand{font-family:'Sora', sans-serif;}
   a{color:inherit; text-decoration:none;}
   .wrap{max-width:760px; margin:0 auto; padding:0 18px;}
 
@@ -28,7 +28,29 @@
   .back{font-size:18px;}
   .nav h1{font-size:17px; font-weight:700;}
 
-  .filter-row{display:flex; gap:8px; overflow-x:auto; margin-top:18px; padding-bottom:4px;}
+  .page-head{margin-top:20px;}
+  .page-head h1{font-size:22px; font-weight:800;}
+  .page-head p{color:var(--muted); font-size:13.5px; margin-top:6px;}
+
+  .bal-card{
+    margin-top:16px; padding:16px 18px; border-radius:16px; display:flex; justify-content:space-between; align-items:center;
+    background:linear-gradient(135deg, rgba(91,110,245,0.18), rgba(91,110,245,0.05));
+    border:1px solid rgba(91,110,245,0.3);
+  }
+  .bal-card .label{color:var(--muted); font-size:12px;}
+  .bal-card .value{font-family:'Sora'; font-size:19px; font-weight:700; margin-top:3px;}
+  .bal-card a{font-size:12.5px; font-weight:600; color:var(--indigo-soft); background:rgba(255,255,255,0.06); padding:8px 14px; border-radius:10px; border:1px solid var(--surface-border);}
+
+  .search-box{
+    margin-top:16px; display:flex; align-items:center; gap:8px;
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:14px; padding:12px 14px;
+  }
+  .search-box input{
+    background:none; border:none; outline:none; color:var(--text); font-size:14px; flex:1;
+  }
+  .search-box input::placeholder{color:var(--muted);}
+
+  .filter-row{display:flex; gap:8px; overflow-x:auto; margin-top:14px; padding-bottom:4px;}
   .filter-chip{
     flex-shrink:0; padding:9px 15px; border-radius:999px; font-size:12.5px; font-weight:600;
     border:1px solid var(--surface-border); background:var(--surface); color:var(--muted); cursor:pointer;
@@ -43,15 +65,23 @@
   .task-cat{font-size:11px; color:var(--indigo-soft); font-weight:600;}
   .task-title{font-size:15px; font-weight:700; margin-top:4px;}
   .task-desc{color:var(--muted); font-size:12.5px; margin-top:6px; line-height:1.5;}
-  .task-reward{font-family:'Sora'; font-weight:800; font-size:16px; color:var(--teal); white-space:nowrap;}
-  .task-meta{display:flex; gap:14px; margin-top:12px; font-size:11.5px; color:var(--muted);}
+  .task-reward{font-family:'Sora'; font-weight:800; font-size:16px; color:var(--teal); white-space:nowrap; text-align:right;}
+  .task-fee-note{font-size:9.5px; color:var(--muted); margin-top:2px; text-align:right;}
+  .task-meta{display:flex; gap:14px; margin-top:12px; font-size:11.5px; color:var(--muted); flex-wrap:wrap;}
+  .task-bottom{display:flex; justify-content:space-between; align-items:center; margin-top:12px;}
   .task-status{
-    display:inline-block; margin-top:10px; padding:4px 10px; border-radius:999px; font-size:10.5px; font-weight:700;
+    display:inline-block; padding:4px 10px; border-radius:999px; font-size:10.5px; font-weight:700;
   }
   .task-status.Available{background:rgba(34,211,184,0.14); color:var(--teal);}
   .task-status.Expired{background:rgba(242,107,107,0.14); color:#F26B6B;}
+  .view-btn{font-size:12px; font-weight:700; color:var(--indigo-soft); background:rgba(91,110,245,0.12); padding:7px 14px; border-radius:10px;}
 
   .empty{color:var(--muted); font-size:13.5px; text-align:center; padding:36px 0;}
+
+  .trust-note{
+    margin-top:22px; background:rgba(91,110,245,0.08); border:1px solid rgba(91,110,245,0.25);
+    border-radius:14px; padding:14px 16px; font-size:12px; color:var(--indigo-soft); line-height:1.6;
+  }
 
   .bottom-nav{
     position:fixed; bottom:0; left:0; right:0; z-index:60;
@@ -69,24 +99,48 @@
 <header>
   <div class="nav">
     <a class="back" href="dashboard.html">←</a>
-    <h1>Earning Opportunities</h1>
+    <h1>Earn Now</h1>
   </div>
 </header>
 
 <div class="wrap">
+
+  <div class="page-head">
+    <h1>Earn Now 💰</h1>
+    <p>Complete verified opportunities and earn rewards.</p>
+  </div>
+
+  <div class="bal-card">
+    <div>
+      <div class="label">Available Balance</div>
+      <div class="value" id="availBal">PKR 0</div>
+    </div>
+    <a href="earnings.html">My Earnings</a>
+  </div>
+
+  <div class="search-box">
+    <span>🔎</span>
+    <input id="searchInput" type="text" placeholder="Search earning opportunities...">
+  </div>
+
   <div class="filter-row" id="filterRow">
     <div class="filter-chip active" data-cat="all">All</div>
-    <div class="filter-chip" data-cat="Micro Tasks">Micro Tasks</div>
+    <div class="filter-chip" data-cat="Micro Tasks">Daily Tasks</div>
     <div class="filter-chip" data-cat="Content Tasks">Content</div>
     <div class="filter-chip" data-cat="Research Tasks">Research</div>
     <div class="filter-chip" data-cat="Digital Tasks">Digital</div>
-    <div class="filter-chip" data-cat="Promotional Campaigns">Promo</div>
+    <div class="filter-chip" data-cat="Design Tasks">Design</div>
+    <div class="filter-chip" data-cat="Promotional Campaigns">Social Media</div>
     <div class="filter-chip" data-cat="Affiliate Tasks">Affiliate</div>
+    <div class="filter-chip" data-cat="Freelance Jobs">Freelance</div>
   </div>
 
   <div class="task-list" id="taskList">
     <div class="empty">Loading opportunities...</div>
   </div>
+
+  <div class="trust-note">Rewards are provided for verified activities. Earnings depend on task availability, successful completion, and approval. No income is guaranteed.</div>
+
 </div>
 
 <nav class="bottom-nav">
@@ -106,19 +160,37 @@
 
   let allTasks = [];
 
-  function render(cat) {
+  function matchesFilter(t, cat) {
+    if (cat === 'all') return true;
+    return t.category === cat;
+  }
+
+  function render() {
     const listEl = document.getElementById('taskList');
-    const rows = cat === 'all' ? allTasks : allTasks.filter(t => t.category === cat);
+    const activeChip = document.querySelector('.filter-chip.active');
+    const cat = activeChip ? activeChip.dataset.cat : 'all';
+    const searchVal = document.getElementById('searchInput').value.trim().toLowerCase();
+
+    let rows = allTasks.filter(({ data: t }) => matchesFilter(t, cat));
+    if (searchVal) {
+      rows = rows.filter(({ data: t }) =>
+        (t.title || '').toLowerCase().includes(searchVal) ||
+        (t.description || '').toLowerCase().includes(searchVal)
+      );
+    }
+
     if (rows.length === 0) {
       listEl.innerHTML = '<div class="empty">No earning opportunities are available right now.</div>';
       return;
     }
+
     listEl.innerHTML = '';
     rows.forEach(({ id, data: t }) => {
       const card = document.createElement('a');
       card.href = `task-details.html?id=${id}`;
       card.className = 'task-card';
       const deadlineStr = t.deadline ? new Date(t.deadline).toLocaleDateString('en-PK', { day: 'numeric', month: 'short' }) : '—';
+      const feeNote = t.clientBudget ? `Client budget ${fmt(t.clientBudget)}` : '';
       card.innerHTML = `
         <div class="task-top">
           <div>
@@ -126,13 +198,20 @@
             <div class="task-title">${t.title || 'Untitled task'}</div>
             <div class="task-desc">${(t.description || '').slice(0, 90)}${(t.description || '').length > 90 ? '…' : ''}</div>
           </div>
-          <div class="task-reward">${fmt(t.reward)}</div>
+          <div>
+            <div class="task-reward">${fmt(t.reward)}</div>
+            ${feeNote ? `<div class="task-fee-note">${feeNote}</div>` : ''}
+          </div>
         </div>
         <div class="task-meta">
           <span>⏱ ${t.estimatedTime || '—'}</span>
           <span>📅 Due ${deadlineStr}</span>
+          ${t.difficulty ? `<span>📊 ${t.difficulty}</span>` : ''}
         </div>
-        <span class="task-status ${t.status}">${t.status || 'Available'}</span>
+        <div class="task-bottom">
+          <span class="task-status ${t.status}">${t.status || 'Available'}</span>
+          <span class="view-btn">View Task</span>
+        </div>
       `;
       listEl.appendChild(card);
     });
@@ -143,14 +222,20 @@
     if (!chip) return;
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
     chip.classList.add('active');
-    render(chip.dataset.cat);
+    render();
   });
 
-  requireAuth(async () => {
+  document.getElementById('searchInput').addEventListener('input', render);
+
+  requireAuth(async (user) => {
     try {
+      const walletDoc = await db.collection(COL.wallets).doc(user.uid).get();
+      const w = walletDoc.data() || {};
+      document.getElementById('availBal').textContent = fmt(w.availableBalance);
+
       const taskQuery = await db.collection(COL.tasks).where('status', '==', 'Available').get();
       allTasks = taskQuery.docs.map(d => ({ id: d.id, data: d.data() }));
-      render('all');
+      render();
     } catch (err) {
       console.error(err);
       document.getElementById('taskList').innerHTML = '<div class="empty">Something went wrong. Please try again.</div>';

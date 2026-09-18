@@ -237,5 +237,30 @@ service cloud.firestore {
       allow read: if true;
       allow write: if enIsAdmin();
     }
+
+    // ---- Marketplace revenue & growth (client-funded jobs, affiliate, campaigns) ----
+    match /earnnova_platform_revenue/{id} {
+      allow read, write: if enIsAdmin();
+    }
+
+    match /earnnova_affiliate_offers/{id} {
+      allow read: if true;
+      allow write: if enIsAdmin();
+    }
+
+    match /earnnova_affiliate_conversions/{id} {
+      allow read: if enIsSignedIn() && (resource.data.userId == request.auth.uid || enIsAdmin());
+      allow write: if enIsAdmin();
+    }
+
+    match /earnnova_campaigns/{id} {
+      allow read: if true;
+      allow write: if enIsAdmin();
+    }
+
+    match /earnnova_freelance_jobs/{id} {
+      allow read: if true;
+      allow write: if enIsAdmin();
+    }
   }
 }

@@ -112,10 +112,15 @@
       actionHtml = `
         <div class="card">
           <h2>Submit your proof</h2>
+          <label for="proofType">Proof type</label>
+          <select id="proofType" style="width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--surface-border); border-radius:12px; padding:12px 14px; color:var(--text); font-size:14px;">
+            <option value="text">Text answer</option>
+            <option value="link">Link (URL)</option>
+          </select>
           <label for="proofText">Proof of completion</label>
-          <textarea id="proofText" placeholder="Describe what you did / paste a link as proof"></textarea>
+          <textarea id="proofText" placeholder="Describe what you did, or paste a link as proof"></textarea>
           <div class="error" id="errorMsg"></div>
-          <button id="submitBtn">Submit Task</button>
+          <button id="submitBtn">Submit Work</button>
         </div>
       `;
     }
@@ -128,6 +133,7 @@
           <div class="reward-pill">${fmt(task.reward)}</div>
           <div class="task-status">${task.status || 'Available'}</div>
         </div>
+        ${task.clientBudget ? `<div style="margin-top:10px; font-size:12px; color:var(--muted);">Client budget: ${fmt(task.clientBudget)} · Platform fee: ${fmt(task.clientBudget - task.reward)} (transparent, paid by the client — not deducted from your reward)</div>` : ''}
       </div>
 
       <div class="meta-grid">
@@ -159,7 +165,12 @@
       submitBtn.addEventListener('click', async () => {
         const errorMsg = document.getElementById('errorMsg');
         const proofText = document.getElementById('proofText').value.trim();
+        const proofType = document.getElementById('proofType').value;
         if (!proofText) { errorMsg.textContent = 'Please provide proof before submitting.'; return; }
+        if (proofType === 'link' && !/^https?:\/\//i.test(proofText)) {
+          errorMsg.textContent = 'Please enter a valid link starting with http:// or https://';
+          return;
+        }
 
         submitBtn.disabled = true;
         submitBtn.textContent = 'Submitting...';
@@ -170,6 +181,7 @@
             taskTitle: task.title,
             userId: currentUser.uid,
             proof: proofText,
+            proofType,
             reward: task.reward,
             status: 'Submitted',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -188,7 +200,7 @@
           console.error(err);
           errorMsg.textContent = 'Something went wrong. Please try again.';
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Submit Task';
+          submitBtn.textContent = 'Submit Work';
         }
       });
     }

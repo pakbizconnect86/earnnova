@@ -146,6 +146,14 @@
   </div>
 
   <div class="section-head">
+    <h2>Today's Opportunities</h2>
+    <a href="tasks.html">Earn Now</a>
+  </div>
+  <div class="activity-list" id="opportunitiesList">
+    <div class="empty">Loading...</div>
+  </div>
+
+  <div class="section-head">
     <h2>Recent Activity</h2>
     <a href="transactions.html">See all</a>
   </div>
@@ -218,6 +226,32 @@
       const unread = await db.collection(COL.notifications)
         .where('userId', '==', user.uid).where('read', '==', false).limit(1).get();
       if (!unread.empty) document.getElementById('notifDot').style.display = 'block';
+
+      // Today's Opportunities (top 3 available tasks)
+      const oppQuery = await db.collection(COL.tasks).where('status', '==', 'Available').limit(3).get();
+      const oppEl = document.getElementById('opportunitiesList');
+      if (oppQuery.empty) {
+        oppEl.innerHTML = '<div class="empty">No earning opportunities are available right now.</div>';
+      } else {
+        oppEl.innerHTML = '';
+        oppQuery.forEach(doc => {
+          const t = doc.data();
+          const item = document.createElement('a');
+          item.href = `task-details.html?id=${doc.id}`;
+          item.className = 'activity-item';
+          item.innerHTML = `
+            <div class="activity-left">
+              <div class="activity-ic">🎯</div>
+              <div>
+                <div class="activity-title">${t.title}</div>
+                <div class="activity-sub">${t.category || ''} · ${t.estimatedTime || ''}</div>
+              </div>
+            </div>
+            <div class="activity-amt in">${fmt(t.reward)}</div>
+          `;
+          oppEl.appendChild(item);
+        });
+      }
 
       // Recent activity (last 5 transactions)
       const txQuery = await db.collection(COL.transactions)
