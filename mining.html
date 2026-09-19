@@ -384,8 +384,43 @@
         updateSessionUI(false);
         loadEverything();
       } else {
-        // START
+        // START — guard against duplicate/overlapping sessions
         if (!miningSettings.miningEnabled) { alert('Mining is currently disabled by the platform.'); btn.disabled = false; return; }
+
+        btn.textContent = 'Checking...';
+
+        // 1) Re-check the server for an already-active session (covers double taps / stale state)
+        const liveActiveSnap = await db.collection(COL.mining)
+          .where('userId', '==', currentUser.uid).where('status', '==', 'Active').limit(1).get();
+
+        if (!liveActiveSnap.empty) {
+          const doc = liveActiveSnap.docs[0];
+          const d = doc.data();
+          const startedAtMs = d.createdAt ? d.createdAt.toDate().getTime() : Date.now();
+          activeSession = { id: doc.id, plannedEndMs: startedAtMs + d.durationMinutes * 60000, startedAtMs, durationMinutes: d.durationMinutes };
+          updateSessionUI(true);
+          clearInterval(timerInterval);
+          timerInterval = setInterval(tickTimer, 1000);
+          tickTimer();
+          alert('You already have a mining session in progress — resumed it for you.');
+          btn.disabled = false;
+          return;
+        }
+
+        // 2) Enforce the daily session cap
+        const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+        const todaySnap = await db.collection(COL.mining)
+          .where('userId', '==', currentUser.uid)
+          .where('createdAt', '>=', startOfToday)
+          .get();
+        const cap = miningSettings.maxSessionsPerDay || 1;
+        if (todaySnap.size >= cap) {
+          alert(`You've reached today's mining limit (${cap} session${cap > 1 ? 's' : ''}). Come back tomorrow!`);
+          btn.disabled = false;
+          btn.textContent = 'Start Mining';
+          refreshDailyLimitUI();
+          return;
+        }
 
         const durationMinutes = miningSettings.sessionDurationMinutes;
         const reward = +(miningPower * miningSettings.rewardRate * (durationMinutes / 60)).toFixed(2);
@@ -411,8 +446,25 @@
       alert('Ooh, that hit an iceberg 🧊 — give it another try!');
     } finally {
       btn.disabled = false;
+      if (btn.textContent === 'Checking...') btn.textContent = activeSession ? 'Stop Mining' : 'Start Mining';
     }
   });
+
+  async function refreshDailyLimitUI() {
+    try {
+      const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+      const todaySnap = await db.collection(COL.mining)
+        .where('userId', '==', currentUser.uid).where('createdAt', '>=', startOfToday).get();
+      const cap = miningSettings.maxSessionsPerDay || 1;
+      if (todaySnap.size >= cap && !activeSession) {
+        const btn = document.getElementById('mineBtn');
+        btn.disabled = true;
+        btn.textContent = 'Daily Limit Reached';
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   function renderSessions(sessions) {
     const listEl = document.getElementById('sessionList');
@@ -477,7 +529,7 @@
       const allTotal = allApproved.reduce((sum, s) => sum + (s.reward || 0), 0);
       document.getElementById('totalRewards').textContent = fmt(allTotal);
 
-      const todaySessions = sessions.filter(s => s.createdAt && isSameDay(s.createdAt.toDate(), today) && s.status !== 'Active');
+      const todaySessions = sessions.filter(s => s.createdAt && isSameDay(s.createdAt.toDate(), today));
       const cap = miningSettings.maxSessionsPerDay || 1;
       document.getElementById('sessionsToday').textContent = `${todaySessions.length} / ${cap}`;
       document.getElementById('progressFill').style.width = Math.min(100, (todaySessions.length / cap) * 100) + '%';
@@ -526,6 +578,7 @@
       document.getElementById('walletBalance').textContent = fmt(w.availableBalance);
 
       await loadEverything();
+      refreshDailyLimitUI();
     } catch (err) {
       console.error(err);
     }
