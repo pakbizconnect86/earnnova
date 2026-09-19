@@ -75,3 +75,38 @@ function requireAdmin(onReady) {
     onReady(user, data);
   });
 }
+
+// Runs a where()+orderBy() query; if Firestore rejects it for lacking a composite index,
+// transparently falls back to a plain where() query and sorts the results client-side —
+// so pages never break just because an index hasn't been created yet in the console.
+async function safeQuery(collectionRef, whereClauses, orderField, orderDir, limitN) {
+  try {
+    let q = collectionRef;
+    whereClauses.forEach(([field, op, value]) => { q = q.where(field, op, value); });
+    if (orderField) q = q.orderBy(orderField, orderDir || 'desc');
+    if (limitN) q = q.limit(limitN);
+    return await q.get();
+  } catch (err) {
+    console.warn('safeQuery: falling back to unindexed query for', err.message);
+    let q = collectionRef;
+    whereClauses.forEach(([field, op, value]) => { q = q.where(field, op, value); });
+    const snap = await q.get();
+    let docs = snap.docs.slice();
+    if (orderField) {
+      docs.sort((a, b) => {
+        const av = a.data()[orderField];
+        const bv = b.data()[orderField];
+        const at = (av && av.toMillis) ? av.toMillis() : (typeof av === 'number' ? av : 0);
+        const bt = (bv && bv.toMillis) ? bv.toMillis() : (typeof bv === 'number' ? bv : 0);
+        return orderDir === 'asc' ? at - bt : bt - at;
+      });
+    }
+    if (limitN) docs = docs.slice(0, limitN);
+    return {
+      docs,
+      size: docs.length,
+      empty: docs.length === 0,
+      forEach: (cb) => docs.forEach(cb)
+    };
+  }
+}

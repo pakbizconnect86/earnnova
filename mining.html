@@ -185,6 +185,37 @@
   .bottom-nav .ic{width:22px; height:22px; display:flex; align-items:center; justify-content:center;}
   .bottom-nav .ic svg{width:100%; height:100%;}
 
+
+  /* ===== Continuous ambient glass shimmer (v2) ===== */
+  .card, .stat-card, .item, .task-card, .h-item, .method, .plan, .ref-item,
+  .menu-item, .row, .sub-card, .activity-item, .meta-card, .cat-card, .step{
+    position: relative;
+    overflow: hidden;
+  }
+  .card::after, .stat-card::after, .item::after, .task-card::after, .h-item::after,
+  .method::after, .plan::after, .ref-item::after, .menu-item::after, .row::after,
+  .sub-card::after, .activity-item::after, .meta-card::after, .cat-card::after, .step::after{
+    content: '';
+    position: absolute;
+    top: 0; left: -70%;
+    width: 40%; height: 100%;
+    background: linear-gradient(115deg, transparent, rgba(255,255,255,0.07), transparent);
+    transform: skewX(-18deg);
+    animation: ambientShimmer 8s ease-in-out infinite;
+    animation-delay: calc(var(--shimmer-delay, 0) * 1s);
+    pointer-events: none;
+  }
+  @keyframes ambientShimmer{
+    0%{ left:-70%; }
+    50%{ left:140%; }
+    100%{ left:140%; }
+  }
+  /* Stagger the shimmer across a list so cards don't all flash in unison */
+  .list > *:nth-child(2n)::after, .task-list > *:nth-child(2n)::after,
+  .menu-list > *:nth-child(2n)::after, .plans > *:nth-child(2n)::after{ animation-delay: 1.6s; }
+  .list > *:nth-child(3n)::after, .task-list > *:nth-child(3n)::after{ animation-delay: 3.2s; }
+  .list > *:nth-child(4n)::after{ animation-delay: 4.8s; }
+
 </style>
 </head>
 <body>
@@ -409,12 +440,24 @@
 
         // 2) Enforce the daily session cap
         const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
-        const todaySnap = await db.collection(COL.mining)
-          .where('userId', '==', currentUser.uid)
-          .where('createdAt', '>=', startOfToday)
-          .get();
+        let todayCount = 0;
+        try {
+          const todaySnap = await db.collection(COL.mining)
+            .where('userId', '==', currentUser.uid)
+            .where('createdAt', '>=', startOfToday)
+            .get();
+          todayCount = todaySnap.size;
+        } catch (err) {
+          // Composite index not ready yet — fall back to a plain query and filter client-side
+          console.warn('Falling back to client-side date filter for daily cap check', err.message);
+          const allSnap = await db.collection(COL.mining).where('userId', '==', currentUser.uid).get();
+          todayCount = allSnap.docs.filter(d => {
+            const c = d.data().createdAt;
+            return c && c.toDate && c.toDate() >= startOfToday;
+          }).length;
+        }
         const cap = miningSettings.maxSessionsPerDay || 1;
-        if (todaySnap.size >= cap) {
+        if (todayCount >= cap) {
           alert(`You've reached today's mining limit (${cap} session${cap > 1 ? 's' : ''}). Come back tomorrow!`);
           btn.disabled = false;
           btn.textContent = 'Start Mining';
@@ -453,10 +496,20 @@
   async function refreshDailyLimitUI() {
     try {
       const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
-      const todaySnap = await db.collection(COL.mining)
-        .where('userId', '==', currentUser.uid).where('createdAt', '>=', startOfToday).get();
+      let todayCount = 0;
+      try {
+        const todaySnap = await db.collection(COL.mining)
+          .where('userId', '==', currentUser.uid).where('createdAt', '>=', startOfToday).get();
+        todayCount = todaySnap.size;
+      } catch (err) {
+        const allSnap = await db.collection(COL.mining).where('userId', '==', currentUser.uid).get();
+        todayCount = allSnap.docs.filter(d => {
+          const c = d.data().createdAt;
+          return c && c.toDate && c.toDate() >= startOfToday;
+        }).length;
+      }
       const cap = miningSettings.maxSessionsPerDay || 1;
-      if (todaySnap.size >= cap && !activeSession) {
+      if (todayCount >= cap && !activeSession) {
         const btn = document.getElementById('mineBtn');
         btn.disabled = true;
         btn.textContent = 'Daily Limit Reached';
@@ -513,8 +566,8 @@
 
   async function loadEverything() {
     try {
-      const sessSnap = await db.collection(COL.mining)
-        .where('userId', '==', currentUser.uid).orderBy('createdAt', 'desc').limit(50).get();
+      const sessSnap = await safeQuery(db.collection(COL.mining),
+        [['userId', '==', currentUser.uid]], 'createdAt', 'desc', 50);
       const sessions = sessSnap.docs.map(d => d.data());
 
       renderSessions(sessions);
