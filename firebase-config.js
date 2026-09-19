@@ -59,8 +59,7 @@ function requireAuth(onReady) {
   });
 }
 
-// Admin guard — checks the user doc's role field before allowing access to /admin/ pages
-function requireAdmin(onReady) {
+// Admin guard — checks the user doc's role field before allowing access to /admin/ pagesfunction requireAdmin(onReady) {
   auth.onAuthStateChanged(async (user) => {
     if (!user) {
       window.location.href = "../login.html";
@@ -109,4 +108,28 @@ async function safeQuery(collectionRef, whereClauses, orderField, orderDir, limi
       forEach: (cb) => docs.forEach(cb)
     };
   }
+}
+
+// Animates a "PKR 1,234" style number counting up from its current displayed value (or 0)
+// to a new target value. Cheap (no blur/filters) so it stays smooth even on slow phones.
+function animateBalance(el, targetValue, prefix) {
+  prefix = prefix === undefined ? 'PKR ' : prefix;
+  if (!el) return;
+  const startValue = 0;
+  const duration = 700;
+  const startTime = performance.now();
+
+  function frame(now) {
+    const progress = Math.min(1, (now - startTime) / duration);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    const current = startValue + (targetValue - startValue) * eased;
+    el.textContent = prefix + Math.round(current).toLocaleString('en-PK');
+    if (progress < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+// Same as animateBalance but for plain numbers (no PKR prefix), e.g. counts, mining power.
+function animateNumber(el, targetValue) {
+  animateBalance(el, targetValue, '');
 }

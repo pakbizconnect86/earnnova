@@ -75,21 +75,28 @@
   @keyframes glacierFloat3{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(25px,-35px) scale(1.1);} }
 
   @keyframes glassFadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-  .card, .stat-card, .main-card, .task-card, .item, .hero-card, .bal-card, .balance-card,
-  .activity-item, .method, .plan, .cat-card, .step, .meta-card, .sub-card, .head-card,
-  .ref-item, .menu-item, .note, .confirm-box, .status-banner, .search-box, .task-details-card{
-    backdrop-filter: blur(18px) saturate(150%);
-    -webkit-backdrop-filter: blur(18px) saturate(150%);
-    animation: glassFadeUp 0.55s cubic-bezier(.2,.7,.3,1) both;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+
+  /* Lightweight cards (lists/repeated items) — fade-in only, NO blur (keeps scrolling smooth) */
+  .stat-card, .item, .task-card, .activity-item, .method, .plan, .cat-card, .step,
+  .meta-card, .sub-card, .ref-item, .menu-item, .h-item, .row{
+    animation: glassFadeUp 0.4s ease both;
+    transition: transform 0.15s ease, border-color 0.2s ease;
   }
-  .card:active, .stat-card:active, .item:active, .task-card:active,
-  .activity-item:active, .method:active, .ref-item:active, .menu-item:active{
+  .stat-card:active, .item:active, .task-card:active, .activity-item:active,
+  .method:active, .ref-item:active, .menu-item:active, .h-item:active{
     transform: scale(0.98);
   }
   a.task-card:hover, a.activity-item:hover, .menu-item:hover{
     border-color: rgba(91,110,245,0.4);
-    box-shadow: 0 8px 30px rgba(91,110,245,0.12);
+  }
+
+  /* Prominent panels only — this is where the blur/glass look actually shows */
+  .card, .main-card, .hero-card, .bal-card, .balance-card, .head-card, .note,
+  .confirm-box, .status-banner, .search-box, .task-details-card, .rig-card,
+  .progress-card, .power-note, .disclaimer, .current-card, .reply-box{
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    animation: glassFadeUp 0.5s cubic-bezier(.2,.7,.3,1) both;
   }
 
   /* Glass shimmer sweep on the big hero-style panels */
@@ -123,36 +130,6 @@
   }
   button:active, .btn-primary:active{ transform: scale(0.97); }
   button:not(:disabled):hover, .btn-primary:hover{ filter: brightness(1.08); }
-
-  /* ===== Continuous ambient glass shimmer (v2) ===== */
-  .card, .stat-card, .item, .task-card, .h-item, .method, .plan, .ref-item,
-  .menu-item, .row, .sub-card, .activity-item, .meta-card, .cat-card, .step{
-    position: relative;
-    overflow: hidden;
-  }
-  .card::after, .stat-card::after, .item::after, .task-card::after, .h-item::after,
-  .method::after, .plan::after, .ref-item::after, .menu-item::after, .row::after,
-  .sub-card::after, .activity-item::after, .meta-card::after, .cat-card::after, .step::after{
-    content: '';
-    position: absolute;
-    top: 0; left: -70%;
-    width: 40%; height: 100%;
-    background: linear-gradient(115deg, transparent, rgba(255,255,255,0.07), transparent);
-    transform: skewX(-18deg);
-    animation: ambientShimmer 8s ease-in-out infinite;
-    animation-delay: calc(var(--shimmer-delay, 0) * 1s);
-    pointer-events: none;
-  }
-  @keyframes ambientShimmer{
-    0%{ left:-70%; }
-    50%{ left:140%; }
-    100%{ left:140%; }
-  }
-  /* Stagger the shimmer across a list so cards don't all flash in unison */
-  .list > *:nth-child(2n)::after, .task-list > *:nth-child(2n)::after,
-  .menu-list > *:nth-child(2n)::after, .plans > *:nth-child(2n)::after{ animation-delay: 1.6s; }
-  .list > *:nth-child(3n)::after, .task-list > *:nth-child(3n)::after{ animation-delay: 3.2s; }
-  .list > *:nth-child(4n)::after{ animation-delay: 4.8s; }
 
 </style>
 </head>

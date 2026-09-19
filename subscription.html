@@ -84,7 +84,7 @@
     display:flex; align-items:center; justify-content:center;
   }
   .pay-ic.jazzcash{background:linear-gradient(135deg, #E9312A, #A30014);}
-  .pay-ic.easypaisa{background:linear-gradient(135deg, #2EBD5C, #0E7A38);}
+  .pay-ic.easypaisa{background:linear-gradient(135deg, #F4FBF6, #E3F5E9);}
   .pay-ic.bank{background:linear-gradient(135deg, var(--indigo), #4756D8); font-size:13px;}
   .method{border:1px solid var(--surface-border); border-radius:12px; padding:10px 6px; text-align:center; font-size:11.5px; font-weight:600; cursor:pointer;}
   .method.selected{border-color:var(--indigo); background:rgba(91,110,245,0.1); color:var(--indigo-soft);}
@@ -107,22 +107,27 @@
   @keyframes glacierFloat3{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(25px,-35px) scale(1.1);} }
 
   @keyframes glassFadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-  .card, .stat-card, .main-card, .task-card, .item, .hero-card, .bal-card, .balance-card,
-  .activity-item, .method, .plan, .cat-card, .step, .meta-card, .sub-card, .head-card,
-  .ref-item, .menu-item, .note, .confirm-box, .status-banner, .search-box, .task-details-card,
-  .rig-card, .progress-card, .power-note, .disclaimer, .h-item, .row, .current-card{
-    backdrop-filter: blur(18px) saturate(150%);
-    -webkit-backdrop-filter: blur(18px) saturate(150%);
-    animation: glassFadeUp 0.55s cubic-bezier(.2,.7,.3,1) both;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  /* Lightweight cards (lists/repeated items) — fade-in only, NO blur (keeps scrolling smooth) */
+  .stat-card, .item, .task-card, .activity-item, .method, .plan, .cat-card, .step,
+  .meta-card, .sub-card, .ref-item, .menu-item, .h-item, .row{
+    animation: glassFadeUp 0.4s ease both;
+    transition: transform 0.15s ease, border-color 0.2s ease;
   }
-  .card:active, .stat-card:active, .item:active, .task-card:active,
-  .activity-item:active, .method:active, .ref-item:active, .menu-item:active, .h-item:active{
+  .stat-card:active, .item:active, .task-card:active, .activity-item:active,
+  .method:active, .ref-item:active, .menu-item:active, .h-item:active{
     transform: scale(0.98);
   }
   a.task-card:hover, a.activity-item:hover, .menu-item:hover{
     border-color: rgba(91,110,245,0.4);
-    box-shadow: 0 8px 30px rgba(91,110,245,0.12);
+  }
+
+  /* Prominent panels only — this is where the blur/glass look actually shows */
+  .card, .main-card, .hero-card, .bal-card, .balance-card, .head-card, .note,
+  .confirm-box, .status-banner, .search-box, .task-details-card, .rig-card,
+  .progress-card, .power-note, .disclaimer, .current-card, .reply-box{
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    animation: glassFadeUp 0.5s cubic-bezier(.2,.7,.3,1) both;
   }
 
   /* Glass shimmer sweep on the big hero-style panels */
@@ -157,36 +162,6 @@
   button:active, .btn-primary:active{ transform: scale(0.97); }
   button:not(:disabled):hover, .btn-primary:hover{ filter: brightness(1.08); }
 
-
-  /* ===== Continuous ambient glass shimmer (v2) ===== */
-  .card, .stat-card, .item, .task-card, .h-item, .method, .plan, .ref-item,
-  .menu-item, .row, .sub-card, .activity-item, .meta-card, .cat-card, .step{
-    position: relative;
-    overflow: hidden;
-  }
-  .card::after, .stat-card::after, .item::after, .task-card::after, .h-item::after,
-  .method::after, .plan::after, .ref-item::after, .menu-item::after, .row::after,
-  .sub-card::after, .activity-item::after, .meta-card::after, .cat-card::after, .step::after{
-    content: '';
-    position: absolute;
-    top: 0; left: -70%;
-    width: 40%; height: 100%;
-    background: linear-gradient(115deg, transparent, rgba(255,255,255,0.07), transparent);
-    transform: skewX(-18deg);
-    animation: ambientShimmer 8s ease-in-out infinite;
-    animation-delay: calc(var(--shimmer-delay, 0) * 1s);
-    pointer-events: none;
-  }
-  @keyframes ambientShimmer{
-    0%{ left:-70%; }
-    50%{ left:140%; }
-    100%{ left:140%; }
-  }
-  /* Stagger the shimmer across a list so cards don't all flash in unison */
-  .list > *:nth-child(2n)::after, .task-list > *:nth-child(2n)::after,
-  .menu-list > *:nth-child(2n)::after, .plans > *:nth-child(2n)::after{ animation-delay: 1.6s; }
-  .list > *:nth-child(3n)::after, .task-list > *:nth-child(3n)::after{ animation-delay: 3.2s; }
-  .list > *:nth-child(4n)::after{ animation-delay: 4.8s; }
 
 </style>
 </head>
@@ -252,8 +227,8 @@
     <h2 id="modalTitle">Activate Plan</h2>
     <div id="payDetails"></div>
     <div class="method-grid" id="methodGrid">
-      <div class="method selected" data-method="JazzCash"><div class="pay-ic jazzcash"><svg viewBox="0 0 40 40" width="20" height="20"><circle cx="20" cy="20" r="16" fill="none" stroke="#fff" stroke-width="1.4" stroke-dasharray="1.5 2.8" opacity="0.65"/><text x="20" y="27" font-family="Sora, sans-serif" font-weight="800" font-size="19" fill="#fff" text-anchor="middle">J</text></svg></div>JazzCash</div>
-      <div class="method" data-method="Easypaisa"><div class="pay-ic easypaisa"><svg viewBox="0 0 40 28" width="22" height="15"><ellipse cx="20" cy="11" rx="13" ry="8.5" fill="none" stroke="#fff" stroke-width="2.8"/><path d="M6 17 Q20 29 34 17" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round"/></svg></div>Easypaisa</div>
+      <div class="method selected" data-method="JazzCash"><div class="pay-ic jazzcash"><svg viewBox="0 0 40 40" width="22" height="22"><circle cx="20" cy="20" r="17" fill="none" stroke="#FFD24C" stroke-width="1.1" stroke-dasharray="0.5 3.2" opacity="0.85"/><circle cx="20" cy="20" r="12.5" fill="none" stroke="#FFD24C" stroke-width="1" stroke-dasharray="0.5 2.6" opacity="0.5"/><text x="20" y="27" font-family="Sora, sans-serif" font-weight="800" font-size="19" fill="#FFD24C" text-anchor="middle">J</text></svg></div>JazzCash</div>
+      <div class="method" data-method="Easypaisa"><div class="pay-ic easypaisa"><svg viewBox="0 0 40 30" width="24" height="18"><ellipse cx="19" cy="12" rx="12.5" ry="8.5" fill="none" stroke="#1A1A1A" stroke-width="3.4"/><path d="M6 19 Q19 30 33 18" stroke="#1FAE4E" stroke-width="3.4" fill="none" stroke-linecap="round"/></svg></div>Easypaisa</div>
       <div class="method" data-method="Bank Transfer"><div class="pay-ic bank">🏦</div>Bank</div>
     </div>
     <label for="txnId">Transaction ID</label>
