@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mining Settings — EarnNova Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:50px;
+  }
+  h1,h2,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:600px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; gap:14px; padding:14px 18px; max-width:600px; margin:0 auto;}
+  .back{font-size:18px;}
+  .nav h1{font-size:16px; font-weight:700;}
+
+  .tabs{display:flex; gap:8px; margin-top:18px;}
+  .tab{flex:1; text-align:center; padding:10px 6px; border-radius:12px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--surface-border); background:var(--surface); color:var(--muted);}
+  .tab.active{background:rgba(91,110,245,0.16); border-color:rgba(91,110,245,0.4); color:var(--indigo-soft);}
+  .panel{display:none; margin-top:16px;}
+  .panel.active{display:block;}
+
+  .card{background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:18px; margin-bottom:14px;}
+  .card h2{font-size:14.5px; font-weight:700; margin-bottom:12px;}
+
+  .toggle-row{display:flex; justify-content:space-between; align-items:center;}
+  .switch{position:relative; width:46px; height:26px;}
+  .switch input{opacity:0; width:0; height:0;}
+  .slider{position:absolute; cursor:pointer; inset:0; background:rgba(255,255,255,0.1); border-radius:999px; transition:0.2s;}
+  .slider:before{position:absolute; content:""; height:20px; width:20px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:0.2s;}
+  input:checked + .slider{background:var(--teal);}
+  input:checked + .slider:before{transform:translateX(20px);}
+
+  label{font-size:12.5px; color:var(--muted); display:block; margin-bottom:6px; margin-top:12px;}
+  input{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--surface-border);
+    border-radius:12px; padding:11px 13px; color:var(--text); font-size:13.5px; outline:none;
+  }
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  button{
+    width:100%; margin-top:16px; padding:12px; border:none; border-radius:12px; font-weight:600; font-size:14px;
+    background:linear-gradient(135deg, var(--indigo), #4756D8); color:#fff; cursor:pointer;
+  }
+  button:disabled{opacity:0.6;}
+  .msg{font-size:12.5px; margin-top:10px; text-align:center; min-height:16px;}
+  .msg.ok{color:var(--teal);}
+  .msg.err{color:var(--danger);}
+
+  .list{display:flex; flex-direction:column; gap:10px;}
+  .item{background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:16px;}
+  .item-top{display:flex; justify-content:space-between; align-items:flex-start;}
+  .item-title{font-size:13.5px; font-weight:700;}
+  .item-sub{color:var(--muted); font-size:11.5px; margin-top:3px;}
+  .item-amt{font-family:'Sora'; font-weight:800; font-size:15px; color:var(--teal);}
+  .action-row{display:flex; gap:10px; margin-top:12px;}
+  .action-row button{flex:1; margin-top:0; padding:10px; font-size:12.5px;}
+  .btn-approve{background:linear-gradient(135deg, var(--teal), #0E7A38);}
+  .btn-reject{background:rgba(242,107,107,0.14); border:1px solid rgba(242,107,107,0.3) !important; color:var(--danger);}
+
+  .stat-row{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--surface-border); font-size:12.5px;}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-row .name{font-weight:600;}
+  .stat-row .sub{color:var(--muted); font-size:10.5px; margin-top:2px;}
+  .stat-row .amt{color:var(--teal); font-weight:700;}
+
+  .empty{color:var(--muted); font-size:13.5px; text-align:center; padding:26px 0;}
+
+  /* ===== Glacier animated background + glass motion ===== */
+  .glacier-bg{ position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+  .glacier-bg span{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.32; will-change:transform; }
+  .glacier-bg span:nth-child(1){ width:280px; height:280px; background:#5B6EF5; top:-90px; left:-70px; animation:glacierFloat1 22s ease-in-out infinite; }
+  .glacier-bg span:nth-child(2){ width:240px; height:240px; background:#22D3B8; top:35%; right:-90px; animation:glacierFloat2 26s ease-in-out infinite; }
+  .glacier-bg span:nth-child(3){ width:220px; height:220px; background:#818CF8; bottom:-80px; left:25%; animation:glacierFloat3 20s ease-in-out infinite; }
+  @keyframes glacierFloat1{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(30px,40px) scale(1.12);} }
+  @keyframes glacierFloat2{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-35px,-25px) scale(1.08);} }
+  @keyframes glacierFloat3{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(25px,-35px) scale(1.1);} }
+
+  @keyframes glassFadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .card, .stat-card, .main-card, .task-card, .item, .hero-card, .bal-card, .balance-card,
+  .activity-item, .method, .plan, .cat-card, .step, .meta-card, .sub-card, .head-card,
+  .ref-item, .menu-item, .note, .confirm-box, .status-banner, .search-box, .task-details-card,
+  .rig-card, .progress-card, .power-note, .disclaimer, .h-item{
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    animation: glassFadeUp 0.55s cubic-bezier(.2,.7,.3,1) both;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .card:active, .stat-card:active, .item:active, .task-card:active,
+  .activity-item:active, .method:active, .ref-item:active, .menu-item:active, .h-item:active{
+    transform: scale(0.98);
+  }
+  a.task-card:hover, a.activity-item:hover, .menu-item:hover{
+    border-color: rgba(91,110,245,0.4);
+    box-shadow: 0 8px 30px rgba(91,110,245,0.12);
+  }
+
+  /* Glass shimmer sweep on the big hero-style panels */
+  .hero-card, .bal-card, .balance-card, .main-card.wide, .head-card, .rig-card{
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-card::before, .bal-card::before, .balance-card::before, .main-card.wide::before, .head-card::before, .rig-card::before{
+    content: '';
+    position: absolute;
+    top: 0; left: -60%;
+    width: 50%; height: 100%;
+    background: linear-gradient(115deg, transparent, rgba(255,255,255,0.16), transparent);
+    transform: skewX(-18deg);
+    animation: glassShimmer 5.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes glassShimmer{
+    0%{ left:-60%; }
+    45%{ left:130%; }
+    100%{ left:130%; }
+  }
+
+  header{
+    backdrop-filter: blur(20px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  }
+
+  button, .btn-primary, .btn-approve, .nav-cta{
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  }
+  button:active, .btn-primary:active{ transform: scale(0.97); }
+  button:not(:disabled):hover, .btn-primary:hover{ filter: brightness(1.08); }
+
+</style>
+</head>
+<body>
+<div class="glacier-bg"><span></span><span></span><span></span></div>
+
+<header>
+  <div class="nav">
+    <a class="back" href="dashboard.html">←</a>
+    <h1>⛏️ Mining Settings</h1>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="tabs" id="tabRow">
+    <div class="tab active" data-panel="settings">Settings</div>
+    <div class="tab" data-panel="pending">Pending Rewards</div>
+    <div class="tab" data-panel="stats">User Stats</div>
+  </div>
+
+  <div class="panel active" id="panel-settings">
+    <div class="card">
+      <div class="toggle-row">
+        <h2 style="margin:0;">Mining Enabled</h2>
+        <label class="switch">
+          <input type="checkbox" id="miningEnabled">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Mining Power</h2>
+      <div class="row2">
+        <div><label>Base Power (all users)</label><input id="basePower" type="number" min="0"></div>
+        <div><label>Power per Approved Task</label><input id="powerPerTask" type="number" min="0" step="0.5"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Reward & Session</h2>
+      <label>Reward Rate (PKR per power / hour)</label>
+      <input id="rewardRate" type="number" min="0" step="0.1">
+      <div class="row2">
+        <div><label>Session Duration (minutes)</label><input id="sessionDuration" type="number" min="1"></div>
+        <div><label>Max Sessions / Day</label><input id="maxSessions" type="number" min="1"></div>
+      </div>
+    </div>
+
+    <button id="saveBtn">Save Mining Settings</button>
+    <div class="msg" id="saveMsg"></div>
+  </div>
+
+  <div class="panel" id="panel-pending">
+    <div class="list" id="pendingList"><div class="empty">Loading...</div></div>
+  </div>
+
+  <div class="panel" id="panel-stats">
+    <div class="card">
+      <h2>Top miners by credited rewards</h2>
+      <div id="statsList"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script>
+  function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK', { maximumFractionDigits: 2 }); }
+  let adminUid = null;
+  let pendingSessions = [];
+
+  document.getElementById('tabRow').addEventListener('click', (e) => {
+    const tab = e.target.closest('.tab');
+    if (!tab) return;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+  });
+
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('saveMsg');
+    const btn = document.getElementById('saveBtn');
+    msg.textContent = '';
+
+    const payload = {
+      miningEnabled: document.getElementById('miningEnabled').checked,
+      basePower: parseFloat(document.getElementById('basePower').value) || 0,
+      powerPerApprovedTask: parseFloat(document.getElementById('powerPerTask').value) || 0,
+      rewardRate: parseFloat(document.getElementById('rewardRate').value) || 0,
+      sessionDurationMinutes: parseInt(document.getElementById('sessionDuration').value) || 60,
+      maxSessionsPerDay: parseInt(document.getElementById('maxSessions').value) || 3
+    };
+
+    btn.disabled = true;
+    try {
+      await db.collection(COL.settings).doc('mining').set(payload, { merge: true });
+      msg.textContent = 'Mining settings saved.';
+      msg.className = 'msg ok';
+    } catch (err) {
+      console.error(err);
+      msg.textContent = 'Failed to save. Please try again.';
+      msg.className = 'msg err';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  function renderPending() {
+    const listEl = document.getElementById('pendingList');
+    if (pendingSessions.length === 0) { listEl.innerHTML = '<div class="empty">No mining sessions waiting for review.</div>'; return; }
+    listEl.innerHTML = '';
+    pendingSessions.forEach(({ id, data: s }) => {
+      const dateStr = s.createdAt ? s.createdAt.toDate().toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `
+        <div class="item-top">
+          <div>
+            <div class="item-title">${s.userName || s.userId}</div>
+            <div class="item-sub">Power ${s.miningPowerAtStart} · ${s.status === 'Stopped' ? (s.actualDurationMinutes + ' min (stopped early)') : s.durationMinutes + ' min'} · ${dateStr}</div>
+          </div>
+          <div class="item-amt">${fmt(s.reward)}</div>
+        </div>
+        <div class="action-row">
+          <button class="btn-approve" data-action="approve" data-id="${id}">Approve & Credit</button>
+          <button class="btn-reject" data-action="reject" data-id="${id}">Reject</button>
+        </div>
+      `;
+      listEl.appendChild(item);
+    });
+  }
+
+  document.getElementById('pendingList').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+    const sess = pendingSessions.find(s => s.id === id);
+    if (!sess) return;
+
+    let reason = null;
+    if (action === 'reject') {
+      reason = prompt('Reason for rejection (optional):') || 'Not specified';
+    }
+
+    btn.disabled = true;
+    btn.textContent = action === 'approve' ? 'Approving...' : 'Rejecting...';
+
+    try {
+      if (action === 'approve') {
+        const walletRef = db.collection(COL.wallets).doc(sess.data.userId);
+        const walletDoc = await walletRef.get();
+        const w = walletDoc.data() || { availableBalance: 0, totalEarned: 0 };
+
+        const newBalance = (w.availableBalance || 0) + sess.data.reward;
+        const newTotalEarned = (w.totalEarned || 0) + sess.data.reward;
+        await walletRef.update({
+          availableBalance: newBalance,
+          totalEarned: newTotalEarned,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await db.collection(COL.transactions).add({
+          transactionId: generateRefId('TX'),
+          userId: sess.data.userId,
+          type: 'Mining Reward',
+          amount: sess.data.reward,
+          previousBalance: w.availableBalance || 0,
+          newBalance,
+          reference: id,
+          status: 'Approved',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: adminUid
+        });
+
+        await db.collection(COL.mining).doc(id).update({
+          status: 'Approved', approvedBy: adminUid, approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await db.collection(COL.notifications).add({
+          userId: sess.data.userId, title: 'Mining reward credited',
+          message: `Your mining session reward of ${fmt(sess.data.reward)} has been approved and added to your balance.`,
+          read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else {
+        await db.collection(COL.mining).doc(id).update({
+          status: 'Rejected', rejectionReason: reason, reviewedBy: adminUid, reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await db.collection(COL.notifications).add({
+          userId: sess.data.userId, title: 'Mining reward rejected',
+          message: `Your mining session reward was rejected. Reason: ${reason}`,
+          read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      await db.collection(COL.adminLogs).add({
+        adminId: adminUid, action: action === 'approve' ? 'Mining reward approved' : 'Mining reward rejected',
+        targetUserId: sess.data.userId, amount: sess.data.reward, reference: id,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      location.reload();
+    } catch (err) {
+      console.error(err);
+      alert('Ooh, that hit an iceberg 🧊 — give it another try!');
+      btn.disabled = false;
+      btn.textContent = action === 'approve' ? 'Approve & Credit' : 'Reject';
+    }
+  });
+
+  requireAdmin(async (user) => {
+    adminUid = user.uid;
+    try {
+      const settingsDoc = await db.collection(COL.settings).doc('mining').get();
+      const s = settingsDoc.exists ? settingsDoc.data() : {};
+      document.getElementById('miningEnabled').checked = s.miningEnabled !== false;
+      document.getElementById('basePower').value = s.basePower ?? 10;
+      document.getElementById('powerPerTask').value = s.powerPerApprovedTask ?? 2;
+      document.getElementById('rewardRate').value = s.rewardRate ?? 5;
+      document.getElementById('sessionDuration').value = s.sessionDurationMinutes ?? 60;
+      document.getElementById('maxSessions').value = s.maxSessionsPerDay ?? 3;
+
+      // Pending mining sessions (Completed or Stopped, awaiting review)
+      const pendingSnap = await db.collection(COL.mining).where('status', 'in', ['Completed', 'Stopped']).get();
+      pendingSessions = [];
+      for (const doc of pendingSnap.docs) {
+        const d = doc.data();
+        const userDoc = await db.collection(COL.users).doc(d.userId).get();
+        d.userName = userDoc.exists ? userDoc.data().fullName : d.userId;
+        pendingSessions.push({ id: doc.id, data: d });
+      }
+      renderPending();
+
+      // User stats — aggregate approved mining rewards per user
+      const approvedSnap = await db.collection(COL.mining).where('status', '==', 'Approved').get();
+      const totals = {};
+      approvedSnap.forEach(doc => {
+        const d = doc.data();
+        totals[d.userId] = (totals[d.userId] || 0) + (d.reward || 0);
+      });
+
+      const statsList = document.getElementById('statsList');
+      const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 20);
+      if (sorted.length === 0) {
+        statsList.innerHTML = '<div class="empty">No credited mining rewards yet.</div>';
+      } else {
+        statsList.innerHTML = '';
+        for (const [uid, total] of sorted) {
+          const userDoc = await db.collection(COL.users).doc(uid).get();
+          const uName = userDoc.exists ? userDoc.data().fullName : uid;
+          const uUserId = userDoc.exists ? userDoc.data().userId : '';
+          const row = document.createElement('div');
+          row.className = 'stat-row';
+          row.innerHTML = `<div><div class="name">${uName}</div><div class="sub">${uUserId}</div></div><div class="amt">${fmt(total)}</div>`;
+          statsList.appendChild(row);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
+</script>
+</body>
+</html>

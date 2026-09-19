@@ -262,5 +262,18 @@ service cloud.firestore {
       allow read: if true;
       allow write: if enIsAdmin();
     }
+
+    // ---- Mining Center ----
+    match /earnnova_mining_sessions/{id} {
+      allow read: if enIsSignedIn() && (resource.data.userId == request.auth.uid || enIsAdmin());
+      allow create: if enIsSignedIn() && request.resource.data.userId == request.auth.uid
+                     && request.resource.data.status == 'Active';
+      allow update: if enIsAdmin() ||
+        (enIsSignedIn() && resource.data.userId == request.auth.uid &&
+         resource.data.status == 'Active' &&
+         request.resource.data.status in ['Completed', 'Stopped'] &&
+         request.resource.data.userId == request.auth.uid);
+      allow delete: if false;
+    }
   }
 }

@@ -34,7 +34,8 @@ const COL = {
   notifications: PREFIX + "notifications",
   tickets: PREFIX + "support_tickets",
   adminLogs: PREFIX + "admin_logs",
-  settings: PREFIX + "settings"
+  settings: PREFIX + "settings",
+  mining: PREFIX + "mining_sessions"
 };
 
 // Generates EN-XXXXXX style user IDs
