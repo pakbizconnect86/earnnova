@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support Tickets — EarnNova Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:40px;
+  }
+  h1,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:700px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; gap:14px; padding:14px 18px; max-width:700px; margin:0 auto;}
+  .back{font-size:18px;}
+  .nav h1{font-size:16px; font-weight:700;}
+
+  .filter-row{display:flex; gap:8px; overflow-x:auto; margin-top:16px; padding-bottom:4px;}
+  .filter-chip{
+    flex-shrink:0; padding:8px 14px; border-radius:999px; font-size:12.5px; font-weight:600;
+    border:1px solid var(--surface-border); background:var(--surface); color:var(--muted); cursor:pointer;
+  }
+  .filter-chip.active{background:rgba(91,110,245,0.16); border-color:rgba(91,110,245,0.4); color:var(--indigo-soft);}
+
+  .list{display:flex; flex-direction:column; gap:10px; margin-top:16px;}
+  .item{background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:16px;}
+  .item-top{display:flex; justify-content:space-between; align-items:flex-start;}
+  .item-subject{font-size:13.5px; font-weight:700;}
+  .item-sub{color:var(--muted); font-size:11px; margin-top:2px;}
+  .item-status{padding:4px 10px; border-radius:999px; font-size:10px; font-weight:700;}
+  .item-status.Open{background:rgba(91,110,245,0.14); color:var(--indigo-soft);}
+  .item-status.In_Progress{background:rgba(245,185,91,0.14); color:#F5B95B;}
+  .item-status.Resolved, .item-status.Closed{background:rgba(34,211,184,0.14); color:var(--teal);}
+  .item-msg{color:var(--muted); font-size:12.5px; margin-top:10px; line-height:1.5;}
+  .reply-box{margin-top:10px; background:rgba(91,110,245,0.08); border:1px solid rgba(91,110,245,0.22); border-radius:12px; padding:12px; font-size:12.5px; line-height:1.5;}
+  .reply-box .label{color:var(--indigo-soft); font-weight:700; font-size:11px; margin-bottom:4px;}
+
+  textarea{
+    width:100%; margin-top:12px; background:rgba(255,255,255,0.04); border:1px solid var(--surface-border);
+    border-radius:12px; padding:11px 13px; color:var(--text); font-size:13px; outline:none; min-height:70px; resize:vertical; font-family:inherit;
+  }
+  .action-row{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+  .action-row button, .action-row select{
+    flex:1; min-width:100px; padding:10px; border:none; border-radius:11px; font-weight:600; font-size:12px; cursor:pointer;
+  }
+  .btn-reply{background:linear-gradient(135deg, var(--indigo), #4756D8); color:#fff;}
+  select.status-select{background:rgba(255,255,255,0.06); border:1px solid var(--surface-border) !important; color:var(--text);}
+  button:disabled{opacity:0.5;}
+  .empty{color:var(--muted); font-size:13.5px; text-align:center; padding:36px 0;}
+
+  /* ===== Glacier animated background + glass motion ===== */
+  .glacier-bg{ position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+  .glacier-bg span{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.32; will-change:transform; }
+  .glacier-bg span:nth-child(1){ width:280px; height:280px; background:#5B6EF5; top:-90px; left:-70px; animation:glacierFloat1 22s ease-in-out infinite; }
+  .glacier-bg span:nth-child(2){ width:240px; height:240px; background:#22D3B8; top:35%; right:-90px; animation:glacierFloat2 26s ease-in-out infinite; }
+  .glacier-bg span:nth-child(3){ width:220px; height:220px; background:#818CF8; bottom:-80px; left:25%; animation:glacierFloat3 20s ease-in-out infinite; }
+  @keyframes glacierFloat1{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(30px,40px) scale(1.12);} }
+  @keyframes glacierFloat2{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-35px,-25px) scale(1.08);} }
+  @keyframes glacierFloat3{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(25px,-35px) scale(1.1);} }
+
+  @keyframes glassFadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .card, .stat-card, .main-card, .task-card, .item, .hero-card, .bal-card, .balance-card,
+  .activity-item, .method, .plan, .cat-card, .step, .meta-card, .sub-card, .head-card,
+  .ref-item, .menu-item, .note, .confirm-box, .status-banner, .search-box, .task-details-card,
+  .rig-card, .progress-card, .power-note, .disclaimer, .h-item, .row, .current-card, .reply-box{
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    animation: glassFadeUp 0.55s cubic-bezier(.2,.7,.3,1) both;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .card:active, .stat-card:active, .item:active, .task-card:active,
+  .activity-item:active, .method:active, .ref-item:active, .menu-item:active, .h-item:active{
+    transform: scale(0.98);
+  }
+  a.task-card:hover, a.activity-item:hover, .menu-item:hover{
+    border-color: rgba(91,110,245,0.4);
+    box-shadow: 0 8px 30px rgba(91,110,245,0.12);
+  }
+
+  header{
+    backdrop-filter: blur(20px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  }
+
+  button, .btn-primary, .btn-approve, .nav-cta{
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  }
+  button:active, .btn-primary:active{ transform: scale(0.97); }
+  button:not(:disabled):hover, .btn-primary:hover{ filter: brightness(1.08); }
+
+</style>
+</head>
+<body>
+<div class="glacier-bg"><span></span><span></span><span></span></div>
+
+<header>
+  <div class="nav">
+    <a class="back" href="dashboard.html">←</a>
+    <h1>Support Tickets</h1>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filter-row" id="filterRow">
+    <div class="filter-chip active" data-status="Open">Open</div>
+    <div class="filter-chip" data-status="In Progress">In Progress</div>
+    <div class="filter-chip" data-status="Resolved">Resolved</div>
+    <div class="filter-chip" data-status="Closed">Closed</div>
+    <div class="filter-chip" data-status="all">All</div>
+  </div>
+  <div class="list" id="list">
+    <div class="empty">Loading...</div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script>
+  let allTickets = [];
+  let adminUid = null;
+
+  function render(status) {
+    const listEl = document.getElementById('list');
+    const rows = status === 'all' ? allTickets : allTickets.filter(t => t.data.status === status);
+    if (rows.length === 0) { listEl.innerHTML = '<div class="empty">No tickets here.</div>'; return; }
+    listEl.innerHTML = '';
+    rows.forEach(({ id, data: t }) => {
+      const dateStr = t.createdAt ? t.createdAt.toDate().toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+      const statusClass = (t.status || '').replace(/ /g, '_');
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.innerHTML = `
+        <div class="item-top">
+          <div>
+            <div class="item-subject">${t.subject}</div>
+            <div class="item-sub">${t.userName || t.userId} · ${t.category} · ${dateStr}</div>
+          </div>
+          <span class="item-status ${statusClass}">${t.status}</span>
+        </div>
+        <div class="item-msg">${t.message}</div>
+        ${t.adminReply ? `<div class="reply-box"><div class="label">Your reply</div>${t.adminReply}</div>` : ''}
+        <textarea placeholder="Write a reply..." id="reply-${id}">${t.adminReply || ''}</textarea>
+        <div class="action-row">
+          <button class="btn-reply" data-action="reply" data-id="${id}">Send Reply</button>
+          <select class="status-select" data-id="${id}" data-action="status">
+            <option value="Open" ${t.status === 'Open' ? 'selected' : ''}>Open</option>
+            <option value="In Progress" ${t.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+            <option value="Waiting for User" ${t.status === 'Waiting for User' ? 'selected' : ''}>Waiting for User</option>
+            <option value="Resolved" ${t.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+            <option value="Closed" ${t.status === 'Closed' ? 'selected' : ''}>Closed</option>
+          </select>
+        </div>
+      `;
+      listEl.appendChild(item);
+    });
+  }
+
+  document.getElementById('filterRow').addEventListener('click', (e) => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    render(chip.dataset.status);
+  });
+
+  document.getElementById('list').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-action="reply"]');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const replyText = document.getElementById(`reply-${id}`).value.trim();
+    if (!replyText) { alert('Please write a reply first.'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    try {
+      const ticket = allTickets.find(t => t.id === id);
+      await db.collection(COL.tickets).doc(id).update({
+        adminReply: replyText, status: 'In Progress', repliedBy: adminUid, repliedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      await db.collection(COL.notifications).add({
+        userId: ticket.data.userId, title: 'Support reply received',
+        message: `Reply to "${ticket.data.subject}": ${replyText}`,
+        read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      location.reload();
+    } catch (err) {
+      console.error(err);
+      alert('Ooh, that hit an iceberg 🧊 — give it another try!');
+      btn.disabled = false;
+      btn.textContent = 'Send Reply';
+    }
+  });
+
+  document.getElementById('list').addEventListener('change', async (e) => {
+    const sel = e.target.closest('select[data-action="status"]');
+    if (!sel) return;
+    const id = sel.dataset.id;
+    const newStatus = sel.value;
+    try {
+      await db.collection(COL.tickets).doc(id).update({ status: newStatus });
+    } catch (err) {
+      console.error(err);
+      alert('Ooh, that hit an iceberg 🧊 — give it another try!');
+    }
+  });
+
+  requireAdmin(async (user) => {
+    adminUid = user.uid;
+    try {
+      const snap = await db.collection(COL.tickets).orderBy('createdAt', 'desc').get();
+      allTickets = [];
+      for (const doc of snap.docs) {
+        const d = doc.data();
+        const userDoc = await db.collection(COL.users).doc(d.userId).get();
+        d.userName = userDoc.exists ? userDoc.data().fullName : d.userId;
+        allTickets.push({ id: doc.id, data: d });
+      }
+      render('Open');
+    } catch (err) {
+      console.error(err);
+      document.getElementById('list').innerHTML = '<div class="empty">Ooh, that hit an iceberg 🧊 — give it another try!</div>';
+    }
+  });
+</script>
+</body>
+</html>

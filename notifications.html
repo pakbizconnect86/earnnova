@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications — EarnNova</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:40px;
+  }
+  h1,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:600px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 18px; max-width:600px; margin:0 auto;}
+  .nav-left{display:flex; align-items:center; gap:14px;}
+  .back{font-size:18px;}
+  .nav h1{font-size:16px; font-weight:700;}
+  .mark-all{font-size:12px; font-weight:600; color:var(--indigo-soft); background:none; border:none; cursor:pointer;}
+
+  .list{display:flex; flex-direction:column; gap:8px; margin-top:18px;}
+  .item{
+    display:flex; gap:12px; background:var(--surface); border:1px solid var(--surface-border); border-radius:14px; padding:14px;
+    position:relative;
+  }
+  .item.unread{border-color:rgba(91,110,245,0.35); background:rgba(91,110,245,0.06);}
+  .item .ic{width:38px; height:38px; border-radius:11px; background:rgba(91,110,245,0.14); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;}
+  .item-title{font-size:13.5px; font-weight:700;}
+  .item-msg{color:var(--muted); font-size:12.5px; margin-top:4px; line-height:1.5;}
+  .item-date{color:var(--muted); font-size:10.5px; margin-top:6px;}
+  .dot{position:absolute; top:14px; right:14px; width:8px; height:8px; border-radius:50%; background:var(--indigo);}
+  .empty{color:var(--muted); font-size:13.5px; text-align:center; padding:40px 0;}
+
+  /* ===== Glacier animated background + glass motion ===== */
+  .glacier-bg{ position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+  .glacier-bg span{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.32; will-change:transform; }
+  .glacier-bg span:nth-child(1){ width:280px; height:280px; background:#5B6EF5; top:-90px; left:-70px; animation:glacierFloat1 22s ease-in-out infinite; }
+  .glacier-bg span:nth-child(2){ width:240px; height:240px; background:#22D3B8; top:35%; right:-90px; animation:glacierFloat2 26s ease-in-out infinite; }
+  .glacier-bg span:nth-child(3){ width:220px; height:220px; background:#818CF8; bottom:-80px; left:25%; animation:glacierFloat3 20s ease-in-out infinite; }
+  @keyframes glacierFloat1{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(30px,40px) scale(1.12);} }
+  @keyframes glacierFloat2{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-35px,-25px) scale(1.08);} }
+  @keyframes glacierFloat3{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(25px,-35px) scale(1.1);} }
+
+  @keyframes glassFadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .card, .stat-card, .main-card, .task-card, .item, .hero-card, .bal-card, .balance-card,
+  .activity-item, .method, .plan, .cat-card, .step, .meta-card, .sub-card, .head-card,
+  .ref-item, .menu-item, .note, .confirm-box, .status-banner, .search-box, .task-details-card,
+  .rig-card, .progress-card, .power-note, .disclaimer, .h-item, .row, .current-card, .reply-box{
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    animation: glassFadeUp 0.55s cubic-bezier(.2,.7,.3,1) both;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .card:active, .stat-card:active, .item:active, .task-card:active,
+  .activity-item:active, .method:active, .ref-item:active, .menu-item:active, .h-item:active{
+    transform: scale(0.98);
+  }
+  a.task-card:hover, a.activity-item:hover, .menu-item:hover{
+    border-color: rgba(91,110,245,0.4);
+    box-shadow: 0 8px 30px rgba(91,110,245,0.12);
+  }
+
+  header{
+    backdrop-filter: blur(20px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  }
+
+  button, .btn-primary, .btn-approve, .nav-cta{
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  }
+  button:active, .btn-primary:active{ transform: scale(0.97); }
+  button:not(:disabled):hover, .btn-primary:hover{ filter: brightness(1.08); }
+
+</style>
+</head>
+<body>
+<div class="glacier-bg"><span></span><span></span><span></span></div>
+
+<header>
+  <div class="nav">
+    <div class="nav-left">
+      <a class="back" href="dashboard.html">←</a>
+      <h1>Notifications</h1>
+    </div>
+    <button class="mark-all" id="markAllBtn">Mark all read</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="list" id="list">
+    <div class="empty">Loading...</div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  const iconMap = {
+    'Deposit': '💳', 'Withdrawal': '📤', 'Task': '✅', 'Mining': '⛏️',
+    'Subscription': '⭐', 'Referral': '🔗', 'default': '🔔'
+  };
+  function pickIcon(title) {
+    for (const key of Object.keys(iconMap)) {
+      if (title && title.toLowerCase().includes(key.toLowerCase())) return iconMap[key];
+    }
+    return iconMap.default;
+  }
+
+  let currentUser = null;
+  let allNotifs = [];
+
+  function render() {
+    const listEl = document.getElementById('list');
+    if (allNotifs.length === 0) { listEl.innerHTML = '<div class="empty">No notifications yet.</div>'; return; }
+    listEl.innerHTML = '';
+    allNotifs.forEach(({ id, data: n }) => {
+      const dateStr = n.createdAt ? n.createdAt.toDate().toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+      const item = document.createElement('div');
+      item.className = 'item' + (n.read ? '' : ' unread');
+      item.dataset.id = id;
+      item.innerHTML = `
+        <div class="ic">${pickIcon(n.title)}</div>
+        <div style="flex:1;">
+          <div class="item-title">${n.title}</div>
+          <div class="item-msg">${n.message}</div>
+          <div class="item-date">${dateStr}</div>
+        </div>
+        ${!n.read ? '<div class="dot"></div>' : ''}
+      `;
+      listEl.appendChild(item);
+    });
+  }
+
+  document.getElementById('list').addEventListener('click', async (e) => {
+    const item = e.target.closest('.item.unread');
+    if (!item) return;
+    const id = item.dataset.id;
+    item.classList.remove('unread');
+    const dot = item.querySelector('.dot');
+    if (dot) dot.remove();
+    try {
+      await db.collection(COL.notifications).doc(id).update({ read: true });
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  document.getElementById('markAllBtn').addEventListener('click', async () => {
+    const unread = allNotifs.filter(n => !n.data.read);
+    if (unread.length === 0) return;
+    try {
+      const batch = db.batch();
+      unread.forEach(n => batch.update(db.collection(COL.notifications).doc(n.id), { read: true }));
+      await batch.commit();
+      document.querySelectorAll('.item.unread').forEach(el => { el.classList.remove('unread'); const d = el.querySelector('.dot'); if (d) d.remove(); });
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  requireAuth(async (user) => {
+    currentUser = user;
+    try {
+      const snap = await db.collection(COL.notifications)
+        .where('userId', '==', user.uid).orderBy('createdAt', 'desc').limit(100).get();
+      allNotifs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+      render();
+    } catch (err) {
+      console.error(err);
+      document.getElementById('list').innerHTML = '<div class="empty">Ooh, that hit an iceberg 🧊 — give it another try!</div>';
+    }
+  });
+</script>
+</body>
+</html>
