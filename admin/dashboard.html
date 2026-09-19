@@ -148,6 +148,18 @@
       <div class="left"><div class="ic">⛏️</div><div class="title">MineNova Settings</div></div>
       <div style="display:flex; align-items:center; gap:8px;"><span class="badge" id="miningBadge" style="display:none;"></span><span class="arrow">›</span></div>
     </a>
+    <a class="menu-item" href="subscriptions.html">
+      <div class="left"><div class="ic">⭐</div><div class="title">Subscriptions</div></div>
+      <div style="display:flex; align-items:center; gap:8px;"><span class="badge" id="subBadge" style="display:none;"></span><span class="arrow">›</span></div>
+    </a>
+    <a class="menu-item" href="referrals.html">
+      <div class="left"><div class="ic">🔗</div><div class="title">Referrals</div></div>
+      <span class="arrow">›</span>
+    </a>
+    <a class="menu-item" href="revenue.html">
+      <div class="left"><div class="ic">📊</div><div class="title">Platform Revenue</div></div>
+      <span class="arrow">›</span>
+    </a>
     <a class="menu-item" href="users.html">
       <div class="left"><div class="ic">👥</div><div class="title">Users</div></div>
       <span class="arrow">›</span>
@@ -167,11 +179,12 @@
 <script>
   requireAdmin(async () => {
     try {
-      const [usersSnap, depSnap, wdSnap, miningSnap] = await Promise.all([
+      const [usersSnap, depSnap, wdSnap, miningSnap, subSnap] = await Promise.all([
         db.collection(COL.users).get(),
         db.collection(COL.deposits).where('status', '==', 'Pending Verification').get(),
         db.collection(COL.withdrawals).where('status', '==', 'Pending Review').get(),
-        db.collection(COL.mining).where('status', 'in', ['Completed', 'Stopped']).get()
+        db.collection(COL.mining).where('status', 'in', ['Completed', 'Stopped']).get(),
+        db.collection(COL.subscriptions).where('status', '==', 'Pending Verification').get()
       ]);
 
       document.getElementById('totalUsers').textContent = usersSnap.size;
@@ -182,6 +195,7 @@
       if (depSnap.size > 0) { const b = document.getElementById('depBadge'); b.textContent = depSnap.size; b.style.display = 'inline-block'; }
       if (wdSnap.size > 0) { const b = document.getElementById('wdBadge'); b.textContent = wdSnap.size; b.style.display = 'inline-block'; }
       if (miningSnap.size > 0) { const b = document.getElementById('miningBadge'); b.textContent = miningSnap.size; b.style.display = 'inline-block'; }
+      if (subSnap.size > 0) { const b = document.getElementById('subBadge'); b.textContent = subSnap.size; b.style.display = 'inline-block'; }
     } catch (err) {
       console.error(err);
 

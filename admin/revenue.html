@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platform Revenue — EarnNova Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:40px;
+  }
+  h1,h2,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:700px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; gap:14px; padding:14px 18px; max-width:700px; margin:0 auto;}
+  .back{font-size:18px;}
+  .nav h1{font-size:16px; font-weight:700;}
+
+  .hero-card{
+    margin-top:18px; padding:24px; border-radius:22px; text-align:center;
+    background:linear-gradient(135deg, rgba(34,211,184,0.18), rgba(91,110,245,0.06));
+    border:1px solid rgba(34,211,184,0.3);
+  }
+  .hero-card .label{color:var(--muted); font-size:13px;}
+  .hero-card .value{font-family:'Sora'; font-size:32px; font-weight:800; margin-top:8px; color:var(--teal);}
+
+  .breakdown{margin-top:18px; display:flex; flex-direction:column; gap:8px;}
+  .row{
+    display:flex; justify-content:space-between; align-items:center;
+    background:var(--surface); border:1px solid var(--surface-border); border-radius:14px; padding:14px 16px;
+  }
+  .row .l{font-size:13.5px; font-weight:600;}
+  .row .sub{color:var(--muted); font-size:11px; margin-top:2px;}
+  .row .v{font-family:'Sora'; font-weight:700; font-size:15px; color:var(--teal);}
+
+  .section-head{margin-top:22px; margin-bottom:10px;}
+  .section-head h2{font-size:14.5px; font-weight:700; color:var(--muted);}
+  .note{
+    margin-top:14px; background:rgba(91,110,245,0.08); border:1px solid rgba(91,110,245,0.25);
+    border-radius:14px; padding:13px 15px; font-size:12px; color:var(--indigo-soft); line-height:1.6;
+  }
+
+  /* ===== Glacier animated background + glass motion ===== */
+  .glacier-bg{ position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+  .glacier-bg span{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.32; will-change:transform; }
+  .glacier-bg span:nth-child(1){ width:280px; height:280px; background:#5B6EF5; top:-90px; left:-70px; animation:glacierFloat1 22s ease-in-out infinite; }
+  .glacier-bg span:nth-child(2){ width:240px; height:240px; background:#22D3B8; top:35%; right:-90px; animation:glacierFloat2 26s ease-in-out infinite; }
+  .glacier-bg span:nth-child(3){ width:220px; height:220px; background:#818CF8; bottom:-80px; left:25%; animation:glacierFloat3 20s ease-in-out infinite; }
+  @keyframes glacierFloat1{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(30px,40px) scale(1.12);} }
+  @keyframes glacierFloat2{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-35px,-25px) scale(1.08);} }
+  @keyframes glacierFloat3{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(25px,-35px) scale(1.1);} }
+
+  @keyframes glassFadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .card, .stat-card, .main-card, .task-card, .item, .hero-card, .bal-card, .balance-card,
+  .activity-item, .method, .plan, .cat-card, .step, .meta-card, .sub-card, .head-card,
+  .ref-item, .menu-item, .note, .confirm-box, .status-banner, .search-box, .task-details-card,
+  .rig-card, .progress-card, .power-note, .disclaimer, .h-item, .row, .current-card{
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    animation: glassFadeUp 0.55s cubic-bezier(.2,.7,.3,1) both;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .card:active, .stat-card:active, .item:active, .task-card:active,
+  .activity-item:active, .method:active, .ref-item:active, .menu-item:active, .h-item:active{
+    transform: scale(0.98);
+  }
+  a.task-card:hover, a.activity-item:hover, .menu-item:hover{
+    border-color: rgba(91,110,245,0.4);
+    box-shadow: 0 8px 30px rgba(91,110,245,0.12);
+  }
+
+  /* Glass shimmer sweep on the big hero-style panels */
+  .hero-card, .bal-card, .balance-card, .main-card.wide, .head-card, .rig-card{
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-card::before, .bal-card::before, .balance-card::before, .main-card.wide::before, .head-card::before, .rig-card::before{
+    content: '';
+    position: absolute;
+    top: 0; left: -60%;
+    width: 50%; height: 100%;
+    background: linear-gradient(115deg, transparent, rgba(255,255,255,0.16), transparent);
+    transform: skewX(-18deg);
+    animation: glassShimmer 5.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes glassShimmer{
+    0%{ left:-60%; }
+    45%{ left:130%; }
+    100%{ left:130%; }
+  }
+
+  header{
+    backdrop-filter: blur(20px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  }
+
+  button, .btn-primary, .btn-approve, .nav-cta{
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  }
+  button:active, .btn-primary:active{ transform: scale(0.97); }
+  button:not(:disabled):hover, .btn-primary:hover{ filter: brightness(1.08); }
+
+</style>
+</head>
+<body>
+<div class="glacier-bg"><span></span><span></span><span></span></div>
+
+<header>
+  <div class="nav">
+    <a class="back" href="dashboard.html">←</a>
+    <h1>Platform Revenue</h1>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero-card">
+    <div class="label">Total Subscription Revenue</div>
+    <div class="value" id="totalRevenue">PKR 0</div>
+  </div>
+
+  <div class="section-head"><h2>BY PLAN</h2></div>
+  <div class="breakdown" id="planBreakdown">
+    <div class="row"><div><div class="l">Loading...</div></div></div>
+  </div>
+
+  <div class="section-head"><h2>ACTIVITY</h2></div>
+  <div class="breakdown">
+    <div class="row"><div><div class="l">Active Subscriptions</div><div class="sub">Currently paying users</div></div><div class="v" id="activeCount">—</div></div>
+    <div class="row"><div><div class="l">Total Deposits Processed</div><div class="sub">Approved user deposits (wallet top-ups, not platform revenue)</div></div><div class="v" id="totalDeposits">PKR 0</div></div>
+    <div class="row"><div><div class="l">Total Withdrawals Paid</div><div class="sub">Approved payouts to users</div></div><div class="v" id="totalWithdrawals">PKR 0</div></div>
+    <div class="row"><div><div class="l">Total Mining Rewards Credited</div><div class="sub">Approved platform rewards paid to users</div></div><div class="v" id="totalMining">PKR 0</div></div>
+  </div>
+
+  <div class="note">Only actual, admin-approved transactions are shown here — nothing on this page is estimated or projected.</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script>
+  function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK'); }
+
+  requireAdmin(async () => {
+    try {
+      const [subTxSnap, activeSubsSnap, depTxSnap, wdTxSnap, miningTxSnap] = await Promise.all([
+        db.collection(COL.transactions).where('type', '==', 'Subscription').where('status', '==', 'Approved').get(),
+        db.collection(COL.subscriptions).where('status', '==', 'Active').get(),
+        db.collection(COL.transactions).where('type', '==', 'Deposit').where('status', '==', 'Approved').get(),
+        db.collection(COL.transactions).where('type', '==', 'Withdrawal').where('status', '==', 'Approved').get(),
+        db.collection(COL.transactions).where('type', '==', 'Mining Reward').where('status', '==', 'Approved').get()
+      ]);
+
+      let totalRevenue = 0;
+      const byPlan = {};
+      const activeSubsByPlan = {};
+
+      subTxSnap.forEach(doc => {
+        const t = doc.data();
+        totalRevenue += (t.amount || 0);
+      });
+
+      activeSubsSnap.forEach(doc => {
+        const s = doc.data();
+        activeSubsByPlan[s.planName] = (activeSubsByPlan[s.planName] || 0) + 1;
+      });
+
+      // Recompute revenue split by plan using the subscriptions that generated each transaction reference
+      const subsDocsMap = {};
+      const allSubsSnap = await db.collection(COL.subscriptions).where('status', '==', 'Active').get();
+      allSubsSnap.forEach(doc => { subsDocsMap[doc.id] = doc.data(); });
+
+      subTxSnap.forEach(doc => {
+        const t = doc.data();
+        const plan = (subsDocsMap[t.reference] && subsDocsMap[t.reference].planName) || 'Other';
+        byPlan[plan] = (byPlan[plan] || 0) + (t.amount || 0);
+      });
+
+      document.getElementById('totalRevenue').textContent = fmt(totalRevenue);
+      document.getElementById('activeCount').textContent = activeSubsSnap.size;
+
+      const planBox = document.getElementById('planBreakdown');
+      const planNames = ['Starter', 'Pro', 'Premium'];
+      planBox.innerHTML = '';
+      planNames.forEach(name => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `<div><div class="l">${name}</div><div class="sub">${activeSubsByPlan[name] || 0} active subscribers</div></div><div class="v">${fmt(byPlan[name] || 0)}</div>`;
+        planBox.appendChild(row);
+      });
+
+      let totalDeposits = 0;
+      depTxSnap.forEach(doc => totalDeposits += (doc.data().amount || 0));
+      document.getElementById('totalDeposits').textContent = fmt(totalDeposits);
+
+      let totalWithdrawals = 0;
+      wdTxSnap.forEach(doc => totalWithdrawals += (doc.data().amount || 0));
+      document.getElementById('totalWithdrawals').textContent = fmt(totalWithdrawals);
+
+      let totalMining = 0;
+      miningTxSnap.forEach(doc => totalMining += (doc.data().amount || 0));
+      document.getElementById('totalMining').textContent = fmt(totalMining);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+</script>
+</body>
+</html>

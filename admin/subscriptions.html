@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Withdrawal Requests — EarnNova Admin</title>
+<title>Subscriptions — EarnNova Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -39,31 +39,23 @@
   .item{background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:16px;}
   .item-top{display:flex; justify-content:space-between; align-items:flex-start;}
   .item-amt{font-family:'Sora'; font-weight:800; font-size:18px; color:var(--teal);}
-  .item-method{font-size:11.5px; color:var(--indigo-soft); font-weight:600; margin-top:2px;}
+  .item-plan{font-size:11.5px; color:var(--indigo-soft); font-weight:600; margin-top:2px;}
   .item-status{padding:4px 10px; border-radius:999px; font-size:10.5px; font-weight:700;}
-  .item-status.Pending_Review{background:rgba(91,110,245,0.14); color:var(--indigo-soft);}
-  .item-status.Additional_Verification_Required{background:rgba(245,185,91,0.14); color:#F5B95B;}
-  .item-status.Approved_·_Paid, .item-status.Approved{background:rgba(34,211,184,0.14); color:var(--teal);}
+  .item-status.Pending_Verification{background:rgba(91,110,245,0.14); color:var(--indigo-soft);}
+  .item-status.Active{background:rgba(34,211,184,0.14); color:var(--teal);}
   .item-status.Rejected{background:rgba(242,107,107,0.14); color:var(--danger);}
+  .item-status.Expired{background:rgba(255,255,255,0.08); color:var(--muted);}
 
   .detail-grid{margin-top:12px; display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--muted);}
   .detail-grid b{color:var(--text);}
 
-  .ref-input{margin-top:12px;}
-  .ref-input input{
-    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--surface-border);
-    border-radius:11px; padding:10px 12px; color:var(--text); font-size:13px; outline:none;
-  }
-
-  .action-row{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+  .action-row{display:flex; gap:10px; margin-top:14px;}
   .action-row button{
-    flex:1; min-width:90px; padding:10px 6px; border:none; border-radius:11px; font-weight:600; font-size:11.5px; cursor:pointer;
+    flex:1; padding:11px; border:none; border-radius:11px; font-weight:600; font-size:13px; cursor:pointer;
   }
-  .btn-paid{background:linear-gradient(135deg, var(--teal), #0E7A38); color:#fff;}
-  .btn-verify{background:rgba(245,185,91,0.14); border:1px solid rgba(245,185,91,0.3) !important; color:#F5B95B;}
+  .btn-approve{background:linear-gradient(135deg, var(--teal), #0E7A38); color:#fff;}
   .btn-reject{background:rgba(242,107,107,0.14); border:1px solid rgba(242,107,107,0.3) !important; color:var(--danger);}
   button:disabled{opacity:0.5;}
-
   .empty{color:var(--muted); font-size:13.5px; text-align:center; padding:36px 0;}
 
   /* ===== Glacier animated background + glass motion ===== */
@@ -79,14 +71,15 @@
   @keyframes glassFadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
   .card, .stat-card, .main-card, .task-card, .item, .hero-card, .bal-card, .balance-card,
   .activity-item, .method, .plan, .cat-card, .step, .meta-card, .sub-card, .head-card,
-  .ref-item, .menu-item, .note, .confirm-box, .status-banner, .search-box, .task-details-card{
+  .ref-item, .menu-item, .note, .confirm-box, .status-banner, .search-box, .task-details-card,
+  .rig-card, .progress-card, .power-note, .disclaimer, .h-item, .row, .current-card{
     backdrop-filter: blur(18px) saturate(150%);
     -webkit-backdrop-filter: blur(18px) saturate(150%);
     animation: glassFadeUp 0.55s cubic-bezier(.2,.7,.3,1) both;
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   }
   .card:active, .stat-card:active, .item:active, .task-card:active,
-  .activity-item:active, .method:active, .ref-item:active, .menu-item:active{
+  .activity-item:active, .method:active, .ref-item:active, .menu-item:active, .h-item:active{
     transform: scale(0.98);
   }
   a.task-card:hover, a.activity-item:hover, .menu-item:hover{
@@ -95,11 +88,11 @@
   }
 
   /* Glass shimmer sweep on the big hero-style panels */
-  .hero-card, .bal-card, .balance-card, .main-card.wide, .head-card{
+  .hero-card, .bal-card, .balance-card, .main-card.wide, .head-card, .rig-card{
     position: relative;
     overflow: hidden;
   }
-  .hero-card::before, .bal-card::before, .balance-card::before, .main-card.wide::before, .head-card::before{
+  .hero-card::before, .bal-card::before, .balance-card::before, .main-card.wide::before, .head-card::before, .rig-card::before{
     content: '';
     position: absolute;
     top: 0; left: -60%;
@@ -125,6 +118,7 @@
   }
   button:active, .btn-primary:active{ transform: scale(0.97); }
   button:not(:disabled):hover, .btn-primary:hover{ filter: brightness(1.08); }
+
 </style>
 </head>
 <body>
@@ -133,15 +127,14 @@
 <header>
   <div class="nav">
     <a class="back" href="dashboard.html">←</a>
-    <h1>Withdrawal Requests</h1>
+    <h1>Subscriptions</h1>
   </div>
 </header>
 
 <div class="wrap">
   <div class="filter-row" id="filterRow">
-    <div class="filter-chip active" data-status="Pending Review">Pending</div>
-    <div class="filter-chip" data-status="Additional Verification Required">Verifying</div>
-    <div class="filter-chip" data-status="Approved / Paid">Paid</div>
+    <div class="filter-chip active" data-status="Pending Verification">Pending</div>
+    <div class="filter-chip" data-status="Active">Active</div>
     <div class="filter-chip" data-status="Rejected">Rejected</div>
     <div class="filter-chip" data-status="all">All</div>
   </div>
@@ -156,42 +149,35 @@
 <script src="../firebase-config.js"></script>
 <script>
   function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK'); }
-  let allWithdrawals = [];
+  let allSubs = [];
   let adminUid = null;
 
   function render(status) {
     const listEl = document.getElementById('list');
-    const rows = status === 'all' ? allWithdrawals : allWithdrawals.filter(w => w.data.status === status);
-    if (rows.length === 0) {
-      listEl.innerHTML = '<div class="empty">No withdrawal requests here.</div>';
-      return;
-    }
+    const rows = status === 'all' ? allSubs : allSubs.filter(s => s.data.status === status);
+    if (rows.length === 0) { listEl.innerHTML = '<div class="empty">No subscription requests here.</div>'; return; }
     listEl.innerHTML = '';
-    rows.forEach(({ id, data: w }) => {
-      const dateStr = w.createdAt ? w.createdAt.toDate().toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-      const statusClass = (w.status || '').replace(/ /g, '_');
+    rows.forEach(({ id, data: s }) => {
+      const dateStr = s.createdAt ? s.createdAt.toDate().toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+      const statusClass = (s.status || '').replace(/ /g, '_');
       const item = document.createElement('div');
       item.className = 'item';
       item.innerHTML = `
         <div class="item-top">
           <div>
-            <div class="item-amt">${fmt(w.amount)}</div>
-            <div class="item-method">${w.method}</div>
+            <div class="item-amt">${fmt(s.price)}</div>
+            <div class="item-plan">${s.planName} plan · ${s.method}</div>
           </div>
-          <span class="item-status ${statusClass}">${w.status}</span>
+          <span class="item-status ${statusClass}">${s.status}</span>
         </div>
         <div class="detail-grid">
-          <div>User: <b>${w.userName || w.userId}</b></div>
-          <div>Withdrawal ID: <b>${w.withdrawalId}</b></div>
-          <div>Account: <b>${w.accountHolderName} — ${w.accountNumber}</b></div>
-          <div>Requested: <b>${dateStr}</b></div>
-          ${w.paymentRef ? `<div>Payment Ref: <b>${w.paymentRef}</b></div>` : ''}
+          <div>User: <b>${s.userName || s.userId}</b></div>
+          <div>Transaction ID: <b>${s.transactionId}</b></div>
+          <div>Submitted: <b>${dateStr}</b></div>
         </div>
-        ${(w.status === 'Pending Review' || w.status === 'Additional Verification Required') ? `
-        <div class="ref-input"><input placeholder="Payment reference / transaction ID" id="ref-${id}"></div>
+        ${s.status === 'Pending Verification' ? `
         <div class="action-row">
-          <button class="btn-paid" data-action="paid" data-id="${id}">Mark as Paid</button>
-          <button class="btn-verify" data-action="verify" data-id="${id}">Request Verification</button>
+          <button class="btn-approve" data-action="approve" data-id="${id}">Approve & Activate</button>
           <button class="btn-reject" data-action="reject" data-id="${id}">Reject</button>
         </div>` : ''}
       `;
@@ -212,98 +198,58 @@
     if (!btn) return;
     const id = btn.dataset.id;
     const action = btn.dataset.action;
-    const wd = allWithdrawals.find(w => w.id === id);
-    if (!wd) return;
+    const sub = allSubs.find(s => s.id === id);
+    if (!sub) return;
 
-    let paymentRef = null;
-    let verifyNote = null;
-    let rejectionReason = null;
-
-    if (action === 'paid') {
-      paymentRef = document.getElementById(`ref-${id}`).value.trim();
-      if (!paymentRef) { alert('Please enter the payment reference / transaction ID first.'); return; }
-      if (!confirm('I confirm that the payment has actually been sent.')) return;
-    } else if (action === 'verify') {
-      verifyNote = prompt('What additional verification is needed? (shown to the user)') || 'Additional verification is required before this withdrawal can be processed.';
+    let reason = null;
+    if (action === 'reject') {
+      reason = prompt('Reason for rejection (optional):') || 'Not specified';
     } else {
-      rejectionReason = prompt('Reason for rejection:');
-      if (rejectionReason === null) return;
-      rejectionReason = rejectionReason || 'Not specified';
+      if (!confirm(`Confirm that this ${fmt(sub.data.price)} payment has been manually verified.`)) return;
     }
 
     btn.disabled = true;
-    btn.textContent = action === 'paid' ? 'Processing...' : action === 'verify' ? 'Requesting...' : 'Rejecting...';
+    btn.textContent = action === 'approve' ? 'Approving...' : 'Rejecting...';
 
     try {
-      if (action === 'paid') {
-        const walletRef = db.collection(COL.wallets).doc(wd.data.userId);
-        const walletDoc = await walletRef.get();
-        const w = walletDoc.data() || { availableBalance: 0, totalWithdrawn: 0 };
-
-        if (w.availableBalance < wd.data.amount) {
-          alert('User no longer has sufficient available balance for this withdrawal.');
-          btn.disabled = false;
-          btn.textContent = 'Mark as Paid';
-          return;
-        }
-
-        const newBalance = w.availableBalance - wd.data.amount;
-        const newTotalWithdrawn = (w.totalWithdrawn || 0) + wd.data.amount;
-        await walletRef.update({
-          availableBalance: newBalance,
-          totalWithdrawn: newTotalWithdrawn,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      if (action === 'approve') {
+        const expiresAt = Date.now() + 30 * 86400000;
+        await db.collection(COL.subscriptions).doc(id).update({
+          status: 'Active', startedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          expiresAt, approvedBy: adminUid, approvedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         await db.collection(COL.transactions).add({
           transactionId: generateRefId('TX'),
-          userId: wd.data.userId,
-          type: 'Withdrawal',
-          amount: wd.data.amount,
-          previousBalance: w.availableBalance,
-          newBalance,
-          reference: wd.data.withdrawalId,
+          userId: sub.data.userId,
+          type: 'Subscription',
+          amount: sub.data.price,
           status: 'Approved',
+          reference: id,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           createdBy: adminUid
         });
 
-        await db.collection(COL.withdrawals).doc(id).update({
-          status: 'Approved / Paid', paymentRef, approvedBy: adminUid, approvedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
         await db.collection(COL.notifications).add({
-          userId: wd.data.userId, title: 'Withdrawal completed',
-          message: `Your withdrawal of ${fmt(wd.data.amount)} has been marked as paid. Reference: ${paymentRef}`,
-          read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      } else if (action === 'verify') {
-        await db.collection(COL.withdrawals).doc(id).update({
-          status: 'Additional Verification Required', verificationNote: verifyNote,
-          reviewedBy: adminUid, reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        await db.collection(COL.notifications).add({
-          userId: wd.data.userId, title: 'Withdrawal needs verification',
-          message: verifyNote,
+          userId: sub.data.userId, title: 'Subscription activated',
+          message: `Your ${sub.data.planName} plan has been activated for 30 days.`,
           read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       } else {
-        await db.collection(COL.withdrawals).doc(id).update({
-          status: 'Rejected', rejectionReason, reviewedBy: adminUid, reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+        await db.collection(COL.subscriptions).doc(id).update({
+          status: 'Rejected', rejectionReason: reason, reviewedBy: adminUid, reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         await db.collection(COL.notifications).add({
-          userId: wd.data.userId, title: 'Withdrawal rejected',
-          message: `Your withdrawal of ${fmt(wd.data.amount)} was rejected. Reason: ${rejectionReason}`,
+          userId: sub.data.userId, title: 'Subscription payment rejected',
+          message: `Your ${sub.data.planName} plan payment was rejected. Reason: ${reason}`,
           read: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
 
       await db.collection(COL.adminLogs).add({
-        adminId: adminUid,
-        action: action === 'paid' ? 'Withdrawal marked paid' : action === 'verify' ? 'Withdrawal verification requested' : 'Withdrawal rejected',
-        targetUserId: wd.data.userId, amount: wd.data.amount, reference: wd.data.withdrawalId,
+        adminId: adminUid, action: action === 'approve' ? 'Subscription activated' : 'Subscription rejected',
+        targetUserId: sub.data.userId, amount: sub.data.price, reference: id,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
@@ -312,22 +258,22 @@
       console.error(err);
       alert('Ooh, that hit an iceberg 🧊 — give it another try!');
       btn.disabled = false;
-      btn.textContent = action === 'paid' ? 'Mark as Paid' : action === 'verify' ? 'Request Verification' : 'Reject';
+      btn.textContent = action === 'approve' ? 'Approve & Activate' : 'Reject';
     }
   });
 
   requireAdmin(async (user) => {
     adminUid = user.uid;
     try {
-      const wdSnap = await db.collection(COL.withdrawals).orderBy('createdAt', 'desc').get();
-      allWithdrawals = [];
-      for (const doc of wdSnap.docs) {
-        const w = doc.data();
-        const userDoc = await db.collection(COL.users).doc(w.userId).get();
-        w.userName = userDoc.exists ? userDoc.data().fullName : w.userId;
-        allWithdrawals.push({ id: doc.id, data: w });
+      const snap = await db.collection(COL.subscriptions).orderBy('createdAt', 'desc').get();
+      allSubs = [];
+      for (const doc of snap.docs) {
+        const d = doc.data();
+        const userDoc = await db.collection(COL.users).doc(d.userId).get();
+        d.userName = userDoc.exists ? userDoc.data().fullName : d.userId;
+        allSubs.push({ id: doc.id, data: d });
       }
-      render('Pending Review');
+      render('Pending Verification');
     } catch (err) {
       console.error(err);
       document.getElementById('list').innerHTML = '<div class="empty">Ooh, that hit an iceberg 🧊 — give it another try!</div>';

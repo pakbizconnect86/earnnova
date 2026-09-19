@@ -184,20 +184,18 @@
 
   <div class="main-cards">
     <div class="main-card wide">
-      <div class="label">Available Balance</div>
+      <div class="label">💳 Available Balance</div>
       <div class="value" id="availBal">PKR 0</div>
     </div>
-    <div class="main-card"><div class="label">Pending Earnings</div><div class="value" id="pendingEarn">PKR 0</div></div>
-    <div class="main-card"><div class="label">Total Earned</div><div class="value" id="totalEarn">PKR 0</div></div>
-    <div class="main-card"><div class="label">Total Withdrawn</div><div class="value" id="totalWithdrawn">PKR 0</div></div>
-    <div class="main-card"><div class="label">Withdrawal Pending</div><div class="value" id="withdrawPending">PKR 0</div></div>
+    <div class="main-card"><div class="label">⛏️ Mining Power</div><div class="value" id="miningPowerCard">—</div></div>
+    <div class="main-card"><div class="label">💰 Today's Reward</div><div class="value" id="todayRewardCard">PKR 0</div></div>
+    <div class="main-card"><div class="label">💵 Total Mining Rewards</div><div class="value" id="totalMiningRewardsCard">PKR 0</div></div>
+    <div class="main-card"><div class="label">⏳ Withdrawal Pending</div><div class="value" id="withdrawPending">PKR 0</div></div>
   </div>
 
   <div class="sub-cards">
-    <div class="sub-card"><div class="v" id="miningPowerSub">—</div><div class="l">Mining Power</div></div>
-    <div class="sub-card"><div class="v" id="miningStatusSub">Idle</div><div class="l">Mining Status</div></div>
-    <div class="sub-card"><div class="v" id="activePlan">—</div><div class="l">Active Plan</div></div>
-    <div class="sub-card"><div class="v" id="totalReferrals">0</div><div class="l">Total Referrals</div></div>
+    <div class="sub-card"><div class="v" id="totalReferrals">0</div><div class="l">👥 Total Referrals</div></div>
+    <a href="subscription.html" class="sub-card" style="grid-column:span 3; text-decoration:none; color:inherit;"><div class="v" id="activePlan">None</div><div class="l">⭐ Active Subscription — tap to view plans</div></a>
   </div>
 
   <a href="mining.html" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; padding:18px; border-radius:20px; background:linear-gradient(135deg, rgba(91,110,245,0.22), rgba(34,211,184,0.08)); border:1px solid rgba(91,110,245,0.3);">
@@ -262,19 +260,26 @@
       const walletDoc = await db.collection(COL.wallets).doc(user.uid).get();
       const w = walletDoc.data() || {};
       document.getElementById('availBal').textContent = fmt(w.availableBalance);
-      document.getElementById('pendingEarn').textContent = fmt(w.pendingEarnings);
-      document.getElementById('totalEarn').textContent = fmt(w.totalEarned);
-      document.getElementById('totalWithdrawn').textContent = fmt(w.totalWithdrawn);
       document.getElementById('withdrawPending').textContent = fmt(w.withdrawalPending);
 
-      // Mining Power & status
+      // Mining Power, Today's Reward, Total Mining Rewards
       const miningSettingsDoc = await db.collection(COL.settings).doc('mining').get();
       const ms = miningSettingsDoc.exists ? miningSettingsDoc.data() : {};
-      document.getElementById('miningPowerSub').textContent = ms.miningPower ?? '—';
+      document.getElementById('miningPowerCard').textContent = ms.miningPower ?? '—';
 
-      const activeSessionQuery = await db.collection(COL.mining)
-        .where('userId', '==', user.uid).where('status', '==', 'Active').limit(1).get();
-      document.getElementById('miningStatusSub').textContent = activeSessionQuery.empty ? 'Idle' : 'Mining';
+      const miningSessSnap = await db.collection(COL.mining)
+        .where('userId', '==', user.uid).where('status', '==', 'Approved').get();
+      const today = new Date();
+      let todayTotal = 0, allTotal = 0;
+      miningSessSnap.forEach(doc => {
+        const s = doc.data();
+        allTotal += (s.reward || 0);
+        if (s.approvedAt && s.approvedAt.toDate().toDateString() === today.toDateString()) {
+          todayTotal += (s.reward || 0);
+        }
+      });
+      document.getElementById('todayRewardCard').textContent = fmt(todayTotal);
+      document.getElementById('totalMiningRewardsCard').textContent = fmt(allTotal);
 
       // Active subscription
       const subQuery = await db.collection(COL.subscriptions)

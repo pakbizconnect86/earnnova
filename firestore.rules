@@ -209,7 +209,8 @@ service cloud.firestore {
 
     match /earnnova_subscriptions/{id} {
       allow read: if enIsSignedIn() && (resource.data.userId == request.auth.uid || enIsAdmin());
-      allow write: if enIsAdmin();
+      allow create: if enIsSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if enIsAdmin();
     }
 
     match /earnnova_referrals/{id} {
