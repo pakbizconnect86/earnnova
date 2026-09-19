@@ -194,36 +194,27 @@
   </div>
 
   <div class="sub-cards">
-    <div class="sub-card"><div class="v" id="completedTasks">0</div><div class="l">Completed Tasks</div></div>
-    <div class="sub-card"><div class="v" id="pendingTasks">0</div><div class="l">Pending Tasks</div></div>
+    <div class="sub-card"><div class="v" id="miningPowerSub">—</div><div class="l">Mining Power</div></div>
+    <div class="sub-card"><div class="v" id="miningStatusSub">Idle</div><div class="l">Mining Status</div></div>
     <div class="sub-card"><div class="v" id="activePlan">—</div><div class="l">Active Plan</div></div>
     <div class="sub-card"><div class="v" id="totalReferrals">0</div><div class="l">Total Referrals</div></div>
   </div>
 
-  <div class="quick-actions">
-    <a class="qa" href="tasks.html"><div class="ic">💼</div>Earn Now</a>
+  <a href="mining.html" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; padding:18px; border-radius:20px; background:linear-gradient(135deg, rgba(91,110,245,0.22), rgba(34,211,184,0.08)); border:1px solid rgba(91,110,245,0.3);">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="font-size:30px;">⛏️</div>
+      <div>
+        <div style="font-family:'Sora'; font-weight:800; font-size:16px;">⛏️ MineNova</div>
+        <div style="color:var(--muted); font-size:11.5px; margin-top:2px;">Start a session and earn platform rewards</div>
+      </div>
+    </div>
+    <div style="color:var(--indigo-soft); font-size:20px;">›</div>
+  </a>
+
+  <div class="quick-actions" style="grid-template-columns:repeat(3,1fr);">
     <a class="qa" href="deposit.html"><div class="ic">💳</div>Deposit</a>
     <a class="qa" href="withdraw.html"><div class="ic">📤</div>Withdraw</a>
     <a class="qa" href="referrals.html"><div class="ic">🔗</div>Refer</a>
-  </div>
-
-  <a href="mining.html" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px; padding:16px 18px; border-radius:18px; background:linear-gradient(135deg, rgba(91,110,245,0.2), rgba(34,211,184,0.08)); border:1px solid rgba(91,110,245,0.3);">
-    <div style="display:flex; align-items:center; gap:12px;">
-      <div style="font-size:26px;">⛏️</div>
-      <div>
-        <div style="font-family:'Sora'; font-weight:700; font-size:14.5px;">Mining Center</div>
-        <div style="color:var(--muted); font-size:11.5px; margin-top:2px;">Start a session, grow your Mining Power</div>
-      </div>
-    </div>
-    <div style="color:var(--indigo-soft); font-size:18px;">›</div>
-  </a>
-
-  <div class="section-head">
-    <h2>Today's Opportunities</h2>
-    <a href="tasks.html">Earn Now</a>
-  </div>
-  <div class="activity-list" id="opportunitiesList">
-    <div class="empty">Loading...</div>
   </div>
 
   <div class="section-head">
@@ -238,7 +229,7 @@
 
 <nav class="bottom-nav">
   <a href="dashboard.html" class="active"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg></div>Home</a>
-  <a href="tasks.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg></div>Earn</a>
+  <a href="mining.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5c3 1 5 3 5 6-3.5 0-6-1-7.5-3"/><path d="M4 20l7-7"/><path d="M11.5 8.5c-3-1-5-3-5-6 3.5 0 6 1 7.5 3"/><path d="M20 4l-7 7"/></svg></div>Mine</a>
   <a href="wallet.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="0.6" fill="currentColor" stroke="none"/></svg></div>Wallet</a>
   <a href="referrals.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.07 0l1.93-1.93a5 5 0 0 0-7.07-7.07L10.5 5.5"/><path d="M14 11a5 5 0 0 0-7.07 0L5 12.93a5 5 0 0 0 7.07 7.07L13.5 18.5"/></svg></div>Referrals</a>
   <a href="profile.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg></div>Profile</a>
@@ -253,6 +244,7 @@
 
   const typeMeta = {
     'Task Reward': { ic: '✅', sign: 'in' },
+    'Mining Reward': { ic: '⛏️', sign: 'in' },
     'Deposit': { ic: '💳', sign: 'in' },
     'Withdrawal': { ic: '📤', sign: 'out' },
     'Referral Commission': { ic: '🔗', sign: 'in' },
@@ -275,14 +267,14 @@
       document.getElementById('totalWithdrawn').textContent = fmt(w.totalWithdrawn);
       document.getElementById('withdrawPending').textContent = fmt(w.withdrawalPending);
 
-      // Task counts
-      const [approvedSubs, pendingSubs] = await Promise.all([
-        db.collection(COL.submissions).where('userId', '==', user.uid).where('status', '==', 'Approved').get(),
-        db.collection(COL.submissions).where('userId', '==', user.uid)
-          .where('status', 'in', ['Submitted', 'Under Review']).get()
-      ]);
-      document.getElementById('completedTasks').textContent = approvedSubs.size;
-      document.getElementById('pendingTasks').textContent = pendingSubs.size;
+      // Mining Power & status
+      const miningSettingsDoc = await db.collection(COL.settings).doc('mining').get();
+      const ms = miningSettingsDoc.exists ? miningSettingsDoc.data() : {};
+      document.getElementById('miningPowerSub').textContent = ms.miningPower ?? '—';
+
+      const activeSessionQuery = await db.collection(COL.mining)
+        .where('userId', '==', user.uid).where('status', '==', 'Active').limit(1).get();
+      document.getElementById('miningStatusSub').textContent = activeSessionQuery.empty ? 'Idle' : 'Mining';
 
       // Active subscription
       const subQuery = await db.collection(COL.subscriptions)
@@ -299,32 +291,6 @@
       const unread = await db.collection(COL.notifications)
         .where('userId', '==', user.uid).where('read', '==', false).limit(1).get();
       if (!unread.empty) document.getElementById('notifDot').style.display = 'block';
-
-      // Today's Opportunities (top 3 available tasks)
-      const oppQuery = await db.collection(COL.tasks).where('status', '==', 'Available').limit(3).get();
-      const oppEl = document.getElementById('opportunitiesList');
-      if (oppQuery.empty) {
-        oppEl.innerHTML = '<div class="empty">No earning opportunities are available right now.</div>';
-      } else {
-        oppEl.innerHTML = '';
-        oppQuery.forEach(doc => {
-          const t = doc.data();
-          const item = document.createElement('a');
-          item.href = `task-details.html?id=${doc.id}`;
-          item.className = 'activity-item';
-          item.innerHTML = `
-            <div class="activity-left">
-              <div class="activity-ic">🎯</div>
-              <div>
-                <div class="activity-title">${t.title}</div>
-                <div class="activity-sub">${t.category || ''} · ${t.estimatedTime || ''}</div>
-              </div>
-            </div>
-            <div class="activity-amt in">${fmt(t.reward)}</div>
-          `;
-          oppEl.appendChild(item);
-        });
-      }
 
       // Recent activity (last 5 transactions)
       const txQuery = await db.collection(COL.transactions)

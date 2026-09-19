@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mining Center — EarnNova</title>
+<title>⛏️ MineNova — EarnNova</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -14,7 +14,7 @@
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
     background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
-    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:60px;
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:80px;
   }
   h1,h2,.brand{font-family:'Sora', sans-serif;}
   a{color:inherit; text-decoration:none;}
@@ -174,6 +174,17 @@
   button:active, .btn-primary:active{ transform: scale(0.97); }
   button:not(:disabled):hover, .btn-primary:hover{ filter: brightness(1.08); }
 
+  .bottom-nav{
+    position:fixed; bottom:0; left:0; right:0; z-index:60;
+    display:flex; justify-content:space-around; align-items:center;
+    background:rgba(10,14,31,0.92); backdrop-filter:blur(14px);
+    border-top:1px solid var(--surface-border); padding:10px 0 14px;
+  }
+  .bottom-nav a{font-size:11px; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .bottom-nav a.active{color:var(--indigo-soft);}
+  .bottom-nav .ic{width:22px; height:22px; display:flex; align-items:center; justify-content:center;}
+  .bottom-nav .ic svg{width:100%; height:100%;}
+
 </style>
 </head>
 <body>
@@ -182,7 +193,7 @@
 <header>
   <div class="nav">
     <a class="back" href="dashboard.html">←</a>
-    <h1>⛏️ Mining Center</h1>
+    <h1>⛏️ MineNova</h1>
   </div>
 </header>
 
@@ -213,6 +224,17 @@
     <div class="disabled-note" id="disabledNote" style="display:none;">Mining is currently disabled by the platform.</div>
   </div>
 
+  <div class="bal-card" style="margin-top:14px; padding:18px; border-radius:18px; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(91,110,245,0.18), rgba(91,110,245,0.05)); border:1px solid rgba(91,110,245,0.3);">
+    <div>
+      <div style="color:var(--muted); font-size:12px;">Wallet Balance</div>
+      <div style="font-family:'Sora'; font-size:20px; font-weight:700; margin-top:4px;" id="walletBalance">PKR 0</div>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <a href="deposit.html" style="font-size:12px; font-weight:600; color:var(--indigo-soft); background:rgba(255,255,255,0.06); padding:9px 14px; border-radius:10px; border:1px solid var(--surface-border);">Deposit</a>
+      <a href="withdraw.html" style="font-size:12px; font-weight:600; color:var(--indigo-soft); background:rgba(255,255,255,0.06); padding:9px 14px; border-radius:10px; border:1px solid var(--surface-border);">Withdraw</a>
+    </div>
+  </div>
+
   <div class="stat-grid">
     <div class="stat-card"><div class="label">Mining Power</div><div class="value power" id="miningPower">—</div></div>
     <div class="stat-card"><div class="label">Today's Reward</div><div class="value teal" id="todayReward">PKR 0</div></div>
@@ -225,9 +247,9 @@
     <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
   </div>
 
-  <div class="power-note">⚡ Mining Power grows automatically as your task submissions get approved — it isn't something you can buy or deposit for. Complete more verified tasks on the Earn Now page to increase it.</div>
+  <div class="power-note">⚡ Your Mining Power is set by the platform and applies to your account. It cannot be increased by depositing money — it changes only through platform-controlled settings.</div>
 
-  <div class="disclaimer">Mining rewards shown here are platform rewards and are not generated through actual cryptocurrency mining.</div>
+  <div class="disclaimer">⚠️ MineNova is a <b>virtual, platform-rewards feature</b> — it does not use real cryptocurrency mining hardware, blockchain mining, or any actual crypto-mining infrastructure. "Rewards" shown here are platform-issued credits, not mined coins.</div>
 
   <div class="tabs" id="tabRow">
     <div class="tab active" data-panel="sessions">Mining History</div>
@@ -243,6 +265,14 @@
 
 </div>
 
+<nav class="bottom-nav">
+  <a href="dashboard.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg></div>Home</a>
+  <a href="mining.html" class="active"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5c3 1 5 3 5 6-3.5 0-6-1-7.5-3"/><path d="M4 20l7-7"/><path d="M11.5 8.5c-3-1-5-3-5-6 3.5 0 6 1 7.5 3"/><path d="M20 4l-7 7"/></svg></div>Mine</a>
+  <a href="wallet.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="0.6" fill="currentColor" stroke="none"/></svg></div>Wallet</a>
+  <a href="referrals.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.07 0l1.93-1.93a5 5 0 0 0-7.07-7.07L10.5 5.5"/><path d="M14 11a5 5 0 0 0-7.07 0L5 12.93a5 5 0 0 0 7.07 7.07L13.5 18.5"/></svg></div>Referrals</a>
+  <a href="profile.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg></div>Profile</a>
+</nav>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -251,7 +281,7 @@
   function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK', { maximumFractionDigits: 2 }); }
 
   let currentUser = null;
-  let miningSettings = { miningEnabled: true, basePower: 10, powerPerApprovedTask: 2, rewardRate: 5, sessionDurationMinutes: 60, maxSessionsPerDay: 3 };
+  let miningSettings = { miningEnabled: true, miningPower: 10, rewardRate: 5, sessionDurationMinutes: 60, maxSessionsPerDay: 3 };
   let miningPower = 10;
   let activeSession = null; // { id, plannedEndSeconds, startedAtMs }
   let timerInterval = null;
@@ -487,12 +517,13 @@
         document.getElementById('disabledNote').style.display = 'block';
       }
 
-      // Mining Power = base + (approved task submissions * power per task) — tamper-proof since
-      // only admin can ever set a submission's status to "Approved".
-      const approvedSnap = await db.collection(COL.submissions)
-        .where('userId', '==', user.uid).where('status', '==', 'Approved').get();
-      miningPower = miningSettings.basePower + (approvedSnap.size * miningSettings.powerPerApprovedTask);
+      // Mining Power is a platform-controlled value — not user-editable or deposit-linked.
+      miningPower = miningSettings.miningPower;
       document.getElementById('miningPower').textContent = miningPower;
+
+      const walletDoc = await db.collection(COL.wallets).doc(user.uid).get();
+      const w = walletDoc.data() || {};
+      document.getElementById('walletBalance').textContent = fmt(w.availableBalance);
 
       await loadEverything();
     } catch (err) {

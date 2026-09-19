@@ -131,7 +131,7 @@
     <div class="stat-card"><div class="label">Total Users</div><div class="value" id="totalUsers">—</div></div>
     <div class="stat-card alert"><div class="label">Pending Deposits</div><div class="value" id="pendingDeposits">—</div></div>
     <div class="stat-card alert"><div class="label">Pending Withdrawals</div><div class="value" id="pendingWithdrawals">—</div></div>
-    <div class="stat-card alert"><div class="label">Pending Task Reviews</div><div class="value" id="pendingTasks">—</div></div>
+    <div class="stat-card alert"><div class="label">Pending Mining Rewards</div><div class="value" id="pendingMining">—</div></div>
   </div>
 
   <div class="section-head"><h2>MANAGE</h2></div>
@@ -144,12 +144,8 @@
       <div class="left"><div class="ic">📤</div><div class="title">Withdrawal Requests</div></div>
       <div style="display:flex; align-items:center; gap:8px;"><span class="badge" id="wdBadge" style="display:none;"></span><span class="arrow">›</span></div>
     </a>
-    <a class="menu-item" href="tasks.html">
-      <div class="left"><div class="ic">💼</div><div class="title">Tasks & Submissions</div></div>
-      <div style="display:flex; align-items:center; gap:8px;"><span class="badge" id="subBadge" style="display:none;"></span><span class="arrow">›</span></div>
-    </a>
     <a class="menu-item" href="mining.html">
-      <div class="left"><div class="ic">⛏️</div><div class="title">Mining Settings</div></div>
+      <div class="left"><div class="ic">⛏️</div><div class="title">MineNova Settings</div></div>
       <div style="display:flex; align-items:center; gap:8px;"><span class="badge" id="miningBadge" style="display:none;"></span><span class="arrow">›</span></div>
     </a>
     <a class="menu-item" href="users.html">
@@ -171,25 +167,24 @@
 <script>
   requireAdmin(async () => {
     try {
-      const [usersSnap, depSnap, wdSnap, subSnap, miningSnap] = await Promise.all([
+      const [usersSnap, depSnap, wdSnap, miningSnap] = await Promise.all([
         db.collection(COL.users).get(),
         db.collection(COL.deposits).where('status', '==', 'Pending Verification').get(),
         db.collection(COL.withdrawals).where('status', '==', 'Pending Review').get(),
-        db.collection(COL.submissions).where('status', 'in', ['Submitted', 'Under Review']).get(),
         db.collection(COL.mining).where('status', 'in', ['Completed', 'Stopped']).get()
       ]);
 
       document.getElementById('totalUsers').textContent = usersSnap.size;
       document.getElementById('pendingDeposits').textContent = depSnap.size;
       document.getElementById('pendingWithdrawals').textContent = wdSnap.size;
-      document.getElementById('pendingTasks').textContent = subSnap.size;
+      document.getElementById('pendingMining').textContent = miningSnap.size;
 
       if (depSnap.size > 0) { const b = document.getElementById('depBadge'); b.textContent = depSnap.size; b.style.display = 'inline-block'; }
       if (wdSnap.size > 0) { const b = document.getElementById('wdBadge'); b.textContent = wdSnap.size; b.style.display = 'inline-block'; }
-      if (subSnap.size > 0) { const b = document.getElementById('subBadge'); b.textContent = subSnap.size; b.style.display = 'inline-block'; }
       if (miningSnap.size > 0) { const b = document.getElementById('miningBadge'); b.textContent = miningSnap.size; b.style.display = 'inline-block'; }
     } catch (err) {
       console.error(err);
+
     }
   });
 </script>

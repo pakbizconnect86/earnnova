@@ -149,6 +149,8 @@
   }
   button:active, .btn-primary:active{ transform: scale(0.97); }
   button:not(:disabled):hover, .btn-primary:hover{ filter: brightness(1.08); }
+  @keyframes dotsPulse{ 0%,100%{opacity:0.5;} 50%{opacity:1;} }
+  #checkingDots{ animation: dotsPulse 1.3s ease-in-out infinite; }
 </style>
 </head>
 <body>
@@ -202,6 +204,9 @@
   <div class="card success-card hidden" id="stepSuccess">
     <div class="ic">⏳</div>
     <h2>Withdrawal Under Review</h2>
+    <div style="margin-top:10px; font-size:13px; font-weight:600; color:var(--indigo-soft); display:inline-flex; align-items:center; gap:6px;">
+      <span id="checkingDots">Checking your withdrawal...</span>
+    </div>
     <p>Your withdrawal request is being manually reviewed. Withdrawals are normally processed within 24 hours.</p>
     <a href="wallet.html">Back to Wallet</a>
   </div>

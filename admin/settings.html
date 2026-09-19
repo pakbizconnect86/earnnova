@@ -164,14 +164,8 @@
     <div class="msg" id="payMsg"></div>
   </div>
 
-  <div class="card">
-    <h2>Platform limits</h2>
-    <label>Minimum Deposit (PKR)</label>
-    <input id="minDeposit" type="number" min="1" placeholder="e.g. 100">
-    <label>Minimum Withdrawal (PKR)</label>
-    <input id="minWithdrawal" type="number" min="1" placeholder="e.g. 500">
-    <button id="saveLimits">Save Limits</button>
-    <div class="msg" id="limitsMsg"></div>
+  <div class="card" style="text-align:center; color:var(--muted); font-size:12.5px; line-height:1.6;">
+    Minimum deposit and minimum withdrawal limits have moved to <a href="mining.html" style="color:var(--indigo-soft); font-weight:600;">⛏️ MineNova Settings</a>.
   </div>
 
 </div>
@@ -225,31 +219,6 @@
     }
   });
 
-  document.getElementById('saveLimits').addEventListener('click', async () => {
-    const msg = document.getElementById('limitsMsg');
-    const btn = document.getElementById('saveLimits');
-    const minDeposit = parseFloat(document.getElementById('minDeposit').value);
-    const minWithdrawal = parseFloat(document.getElementById('minWithdrawal').value);
-
-    if (!minDeposit || minDeposit <= 0) { msg.textContent = 'Enter a valid minimum deposit.'; msg.className = 'msg err'; return; }
-    if (!minWithdrawal || minWithdrawal <= 0) { msg.textContent = 'Enter a valid minimum withdrawal.'; msg.className = 'msg err'; return; }
-
-    btn.disabled = true;
-    msg.textContent = '';
-    try {
-      await db.collection(COL.settings).doc('deposit').set({ minDeposit }, { merge: true });
-      await db.collection(COL.settings).doc('withdrawal').set({ minWithdrawal }, { merge: true });
-      msg.textContent = 'Limits saved.';
-      msg.className = 'msg ok';
-    } catch (err) {
-      console.error(err);
-      msg.textContent = 'Failed to save. Please try again.';
-      msg.className = 'msg err';
-    } finally {
-      btn.disabled = false;
-    }
-  });
-
   requireAdmin(async () => {
     try {
       const payDoc = await db.collection(COL.settings).doc('payment').get();
@@ -269,12 +238,6 @@
           document.getElementById('bank-number').value = d['Bank Transfer']['Account Number'] || '';
         }
       }
-
-      const depDoc = await db.collection(COL.settings).doc('deposit').get();
-      if (depDoc.exists && depDoc.data().minDeposit) document.getElementById('minDeposit').value = depDoc.data().minDeposit;
-
-      const wdDoc = await db.collection(COL.settings).doc('withdrawal').get();
-      if (wdDoc.exists && wdDoc.data().minWithdrawal) document.getElementById('minWithdrawal').value = wdDoc.data().minWithdrawal;
     } catch (err) {
       console.error(err);
     }

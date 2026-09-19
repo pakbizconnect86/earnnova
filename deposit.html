@@ -172,7 +172,7 @@
       <div class="method" data-method="Easypaisa"><div class="pay-ic easypaisa">EP</div>Easypaisa</div>
       <div class="method" data-method="Bank Transfer"><div class="pay-ic bank">🏦</div>Bank</div>
     </div>
-    <div class="note" id="minDepositNote">Minimum deposit: PKR 100</div>
+    <div class="note" id="minDepositNote">Minimum deposit: PKR 500</div>
     <button id="toStep2" disabled>Continue</button>
   </div>
 
@@ -213,7 +213,7 @@
 <script>
   let selectedMethod = null;
   let currentUser = null;
-  let minDeposit = 100;
+  let minDeposit = 500;
 
   // Default payment details — admin can override these via earnnova_settings/payment doc
   const defaultDetails = {
