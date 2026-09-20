@@ -59,7 +59,8 @@ function requireAuth(onReady) {
   });
 }
 
-// Admin guard — checks the user doc's role field before allowing access to /admin/ pagesfunction requireAdmin(onReady) {
+// Admin guard — checks the user doc's role field before allowing access to /admin/ pages
+function requireAdmin(onReady) {
   auth.onAuthStateChanged(async (user) => {
     if (!user) {
       window.location.href = "../login.html";
