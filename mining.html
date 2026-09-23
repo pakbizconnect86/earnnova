@@ -232,7 +232,7 @@
 
   <div class="bal-card" style="margin-top:14px; padding:18px; border-radius:18px; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(91,110,245,0.18), rgba(91,110,245,0.05)); border:1px solid rgba(91,110,245,0.3);">
     <div>
-      <div style="color:var(--muted); font-size:12px;">Wallet Balance</div>
+      <div style="color:var(--muted); font-size:12px;">💰 Available Balance</div>
       <div style="font-family:'Sora'; font-size:20px; font-weight:700; margin-top:4px;" id="walletBalance">PKR 0</div>
     </div>
     <div style="display:flex; gap:8px;">
@@ -241,11 +241,20 @@
     </div>
   </div>
 
+  <div id="pausedBanner" style="display:none; margin-top:14px; padding:14px 16px; border-radius:14px; background:rgba(245,185,91,0.1); border:1px solid rgba(245,185,91,0.3); color:#F5B95B; font-size:12.5px; line-height:1.6; text-align:center;">
+    ⏸ Mining rewards are temporarily paused while the reward pool is being replenished.
+  </div>
+
   <div class="stat-grid">
-    <div class="stat-card"><div class="label">Mining Power</div><div class="value power" id="miningPower">—</div></div>
-    <div class="stat-card"><div class="label">Today's Reward</div><div class="value teal" id="todayReward">PKR 0</div></div>
+    <div class="stat-card"><div class="label">⛏️ Mining Power</div><div class="value power" id="miningPower">—</div></div>
+    <div class="stat-card"><div class="label">💰 Mining Reward (Today)</div><div class="value teal" id="todayReward">PKR 0</div></div>
     <div class="stat-card"><div class="label">Total Rewards</div><div class="value teal" id="totalRewards">PKR 0</div></div>
-    <div class="stat-card"><div class="label">Reward Rate</div><div class="value" id="rewardRate">—</div></div>
+    <div class="stat-card"><div class="label">💸 Eligible Withdrawal</div><div class="value teal" id="eligibleWithdrawal">PKR 0</div></div>
+  </div>
+
+  <div style="display:flex; align-items:center; gap:8px; margin-top:12px; padding:10px 14px; border-radius:12px; background:var(--surface); border:1px solid var(--surface-border); font-size:12px; font-weight:600;" id="poolStatusBadge">
+    <span id="poolStatusDot" style="width:7px; height:7px; border-radius:50%; background:var(--teal); flex-shrink:0;"></span>
+    <span>📊 Reward Pool: <span id="poolStatusText" style="color:var(--teal);">Active</span></span>
   </div>
 
   <div class="progress-card">
@@ -255,7 +264,7 @@
 
   <div class="power-note">⚡ Your Mining Power is set by the platform and applies to your account. It cannot be increased by depositing money — it changes only through platform-controlled settings.</div>
 
-  <div class="disclaimer">⚠️ MineNova is a <b>virtual, platform-rewards feature</b> — it does not use real cryptocurrency mining hardware, blockchain mining, or any actual crypto-mining infrastructure. "Rewards" shown here are platform-issued credits, not mined coins.</div>
+  <div class="disclaimer">⚠️ MineNova is a <b>virtual/platform-rewards system</b> — it does not use real cryptocurrency mining hardware, blockchain mining, or any actual crypto-mining infrastructure. Rewards depend on available platform revenue and eligibility. <b>No guaranteed profit is promised.</b></div>
 
   <div class="tabs" id="tabRow">
     <div class="tab active" data-panel="sessions">Mining History</div>
@@ -590,8 +599,6 @@
       const settingsDoc = await db.collection(COL.settings).doc('mining').get();
       if (settingsDoc.exists) miningSettings = { ...miningSettings, ...settingsDoc.data() };
 
-      document.getElementById('rewardRate').textContent = `${miningSettings.rewardRate}/hr`;
-
       if (!miningSettings.miningEnabled) {
         document.getElementById('mineBtn').disabled = true;
         document.getElementById('disabledNote').style.display = 'block';
@@ -604,6 +611,15 @@
       const walletDoc = await db.collection(COL.wallets).doc(user.uid).get();
       const w = walletDoc.data() || {};
       animateBalance(document.getElementById('walletBalance'), w.availableBalance || 0);
+      animateBalance(document.getElementById('eligibleWithdrawal'), w.availableBalance || 0);
+
+      // Reward Pool status (non-sensitive — no balance figures shown to users)
+      if (miningSettings.rewardsPaused) {
+        document.getElementById('pausedBanner').style.display = 'block';
+        document.getElementById('poolStatusDot').style.background = '#F5B95B';
+        document.getElementById('poolStatusText').textContent = 'Paused';
+        document.getElementById('poolStatusText').style.color = '#F5B95B';
+      }
 
       await loadEverything();
       refreshDailyLimitUI();

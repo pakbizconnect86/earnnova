@@ -311,6 +311,29 @@
 
     try {
       if (action === 'approve') {
+        // Re-fetch fresh from the server to make sure this hasn't already been approved
+        // (prevents double-crediting from a double tap or a second admin tab)
+        const freshDoc = await db.collection(COL.mining).doc(id).get();
+        const freshStatus = freshDoc.exists ? freshDoc.data().status : null;
+        if (freshStatus === 'Approved') {
+          alert('This reward was already approved.');
+          btn.disabled = false;
+          btn.textContent = 'Approve & Credit';
+          return;
+        }
+
+        // Check the Reward Pool has enough real revenue-backed funds before crediting anything
+        const poolRef = db.collection('earnnova_reward_pool').doc('main');
+        const poolDoc = await poolRef.get();
+        const pool = poolDoc.exists ? poolDoc.data() : { balance: 0, totalAllocated: 0, totalCredited: 0 };
+
+        if ((pool.balance || 0) < sess.data.reward) {
+          alert(`Cannot approve — Reward Pool balance (${(pool.balance || 0).toLocaleString('en-PK')} PKR) is lower than this reward (${sess.data.reward.toLocaleString('en-PK')} PKR). Allocate more revenue to the pool first (Reward Pool page).`);
+          btn.disabled = false;
+          btn.textContent = 'Approve & Credit';
+          return;
+        }
+
         const walletRef = db.collection(COL.wallets).doc(sess.data.userId);
         const walletDoc = await walletRef.get();
         const w = walletDoc.data() || { availableBalance: 0, totalEarned: 0 };
@@ -322,6 +345,19 @@
           totalEarned: newTotalEarned,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+
+        // Deduct the credited reward from the Reward Pool
+        const newPoolBalance = (pool.balance || 0) - sess.data.reward;
+        const newTotalCredited = (pool.totalCredited || 0) + sess.data.reward;
+        await poolRef.set({
+          balance: newPoolBalance, totalAllocated: pool.totalAllocated || 0, totalCredited: newTotalCredited,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // Auto re-check the low-pool pause threshold after this deduction
+        const settingsDoc = await db.collection(COL.settings).doc('mining').get();
+        const threshold = (settingsDoc.exists && settingsDoc.data().lowPoolThreshold) || 0;
+        await db.collection(COL.settings).doc('mining').set({ rewardsPaused: newPoolBalance < threshold }, { merge: true });
 
         await db.collection(COL.transactions).add({
           transactionId: generateRefId('TX'),

@@ -248,6 +248,14 @@ service cloud.firestore {
       allow read, write: if enIsAdmin();
     }
 
+    match /earnnova_reward_pool/{id} {
+      allow read, write: if enIsAdmin();
+    }
+
+    match /earnnova_reward_pool_allocations/{id} {
+      allow read, write: if enIsAdmin();
+    }
+
     match /earnnova_affiliate_offers/{id} {
       allow read: if true;
       allow write: if enIsAdmin();

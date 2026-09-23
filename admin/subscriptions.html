@@ -236,6 +236,15 @@
           createdBy: adminUid
         });
 
+        // Auto-log this as real platform revenue (visible on the Reward Pool page)
+        await db.collection('earnnova_platform_revenue').add({
+          source: 'Subscription',
+          amount: sub.data.price,
+          description: `${sub.data.planName} plan — ${sub.data.userId}`,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: adminUid
+        });
+
         await db.collection(COL.notifications).add({
           userId: sub.data.userId, title: 'Subscription activated',
           message: `Your ${sub.data.planName} plan has been activated for 30 days.`,

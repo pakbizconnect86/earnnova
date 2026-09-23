@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reward Pool — EarnNova Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E1F; --surface:rgba(255,255,255,0.045); --surface-border:rgba(255,255,255,0.09);
+    --text:#EDEFF7; --muted:#8D94B8; --indigo:#5B6EF5; --indigo-soft:#818CF8; --teal:#22D3B8; --danger:#F26B6B; --amber:#F5B95B;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 15% 0%, rgba(91,110,245,0.16), transparent 45%), var(--bg);
+    color:var(--text); font-family:'Inter', sans-serif; padding-bottom:50px;
+  }
+  h1,h2,.brand{font-family:'Sora', sans-serif;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:600px; margin:0 auto; padding:0 18px;}
+
+  header{
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(14px);
+    background:rgba(10,14,31,0.75); border-bottom:1px solid var(--surface-border);
+  }
+  .nav{display:flex; align-items:center; gap:14px; padding:14px 18px; max-width:600px; margin:0 auto;}
+  .back{font-size:18px;}
+  .nav h1{font-size:16px; font-weight:700;}
+
+  .hero-card{
+    margin-top:18px; padding:24px; border-radius:22px; text-align:center;
+    background:linear-gradient(135deg, rgba(34,211,184,0.2), rgba(91,110,245,0.06));
+    border:1px solid rgba(34,211,184,0.35);
+  }
+  .hero-card.low{background:linear-gradient(135deg, rgba(242,107,107,0.2), rgba(91,110,245,0.06)); border-color:rgba(242,107,107,0.35);}
+  .hero-card .label{color:var(--muted); font-size:13px;}
+  .hero-card .value{font-family:'Sora'; font-size:32px; font-weight:800; margin-top:8px; color:var(--teal);}
+  .hero-card.low .value{color:var(--danger);}
+  .pause-note{margin-top:10px; font-size:12px; color:var(--amber); font-weight:600;}
+
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px;}
+  .stat-card{background:var(--surface); border:1px solid var(--surface-border); border-radius:14px; padding:14px;}
+  .stat-card .label{color:var(--muted); font-size:11.5px;}
+  .stat-card .value{font-family:'Sora'; font-size:17px; font-weight:700; margin-top:5px;}
+
+  .card{background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:20px; margin-top:18px;}
+  .card h2{font-size:14.5px; font-weight:700; margin-bottom:12px;}
+  label{font-size:12.5px; color:var(--muted); display:block; margin-bottom:6px; margin-top:12px;}
+  input, select, textarea{
+    width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--surface-border);
+    border-radius:12px; padding:11px 13px; color:var(--text); font-size:13.5px; outline:none; font-family:inherit;
+  }
+  button{
+    width:100%; margin-top:16px; padding:12px; border:none; border-radius:12px; font-weight:600; font-size:14px;
+    background:linear-gradient(135deg, var(--indigo), #4756D8); color:#fff; cursor:pointer;
+  }
+  button:disabled{opacity:0.6;}
+  .msg{font-size:12.5px; margin-top:10px; text-align:center; min-height:16px;}
+  .msg.ok{color:var(--teal);}
+  .msg.err{color:var(--danger);}
+
+  .revenue-breakdown{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
+  .rev-row{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--surface-border); font-size:13px;}
+  .rev-row:last-child{border-bottom:none;}
+  .rev-row .v{font-weight:700; color:var(--teal);}
+
+  .list{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
+  .item{background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:12px; padding:12px 14px; font-size:12.5px;}
+  .item .top{display:flex; justify-content:space-between;}
+  .item .amt{font-weight:700; color:var(--teal);}
+  .item .sub{color:var(--muted); font-size:11px; margin-top:3px;}
+  .empty{color:var(--muted); font-size:13px; text-align:center; padding:16px 0;}
+
+  .note{
+    margin-top:14px; background:rgba(91,110,245,0.08); border:1px solid rgba(91,110,245,0.25);
+    border-radius:14px; padding:13px 15px; font-size:12px; color:var(--indigo-soft); line-height:1.6;
+  }
+
+  /* ===== Glacier animated background + glass motion ===== */
+  .glacier-bg{ position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+  .glacier-bg span{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.32; will-change:transform; }
+  .glacier-bg span:nth-child(1){ width:280px; height:280px; background:#5B6EF5; top:-90px; left:-70px; animation:glacierFloat1 22s ease-in-out infinite; }
+  .glacier-bg span:nth-child(2){ width:240px; height:240px; background:#22D3B8; top:35%; right:-90px; animation:glacierFloat2 26s ease-in-out infinite; }
+  .glacier-bg span:nth-child(3){ width:220px; height:220px; background:#818CF8; bottom:-80px; left:25%; animation:glacierFloat3 20s ease-in-out infinite; }
+  @keyframes glacierFloat1{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(30px,40px) scale(1.12);} }
+  @keyframes glacierFloat2{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(-35px,-25px) scale(1.08);} }
+  @keyframes glacierFloat3{ 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(25px,-35px) scale(1.1);} }
+
+  @keyframes glassFadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  /* Lightweight cards (lists/repeated items) — fade-in only, NO blur (keeps scrolling smooth) */
+  .stat-card, .item, .task-card, .activity-item, .method, .plan, .cat-card, .step,
+  .meta-card, .sub-card, .ref-item, .menu-item, .h-item, .row, .rev-row{
+    animation: glassFadeUp 0.4s ease both;
+    transition: transform 0.15s ease, border-color 0.2s ease;
+  }
+  .stat-card:active, .item:active, .task-card:active, .activity-item:active,
+  .method:active, .ref-item:active, .menu-item:active, .h-item:active{
+    transform: scale(0.98);
+  }
+  a.task-card:hover, a.activity-item:hover, .menu-item:hover{
+    border-color: rgba(91,110,245,0.4);
+  }
+
+  /* Prominent panels only — this is where the blur/glass look actually shows */
+  .card, .main-card, .hero-card, .bal-card, .balance-card, .head-card, .note,
+  .confirm-box, .status-banner, .search-box, .task-details-card, .rig-card,
+  .progress-card, .power-note, .disclaimer, .current-card, .reply-box{
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    animation: glassFadeUp 0.5s cubic-bezier(.2,.7,.3,1) both;
+  }
+
+  header{
+    backdrop-filter: blur(20px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+  }
+
+  button, .btn-primary, .btn-approve, .nav-cta{
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  }
+  button:active, .btn-primary:active{ transform: scale(0.97); }
+  button:not(:disabled):hover, .btn-primary:hover{ filter: brightness(1.08); }
+
+</style>
+</head>
+<body>
+<div class="glacier-bg"><span></span><span></span><span></span></div>
+
+<header>
+  <div class="nav">
+    <a class="back" href="dashboard.html">←</a>
+    <h1>💧 Reward Pool</h1>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero-card" id="heroCard">
+    <div class="label">Remaining Reward Pool</div>
+    <div class="value" id="poolBalance">PKR 0</div>
+    <div class="pause-note" id="pauseNote" style="display:none;">⏸ Rewards currently PAUSED — pool below threshold</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="label">Total Revenue</div><div class="value" id="totalRevenue">PKR 0</div></div>
+    <div class="stat-card"><div class="label">Allocated to Pool</div><div class="value" id="totalAllocated">PKR 0</div></div>
+    <div class="stat-card"><div class="label">Total Rewards Credited</div><div class="value" id="totalCredited">PKR 0</div></div>
+    <div class="stat-card"><div class="label">Total Withdrawals Paid</div><div class="value" id="totalWithdrawn">PKR 0</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Revenue by source</h2>
+    <div class="revenue-breakdown" id="revenueBreakdown">
+      <div class="empty">Loading...</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Log new revenue</h2>
+    <label>Source</label>
+    <select id="revSource">
+      <option>Subscription</option>
+      <option>Affiliate</option>
+      <option>Sponsored Campaign</option>
+      <option>Platform Service</option>
+    </select>
+    <label>Amount (PKR)</label>
+    <input id="revAmount" type="number" min="1">
+    <label>Description (optional)</label>
+    <input id="revDesc" placeholder="e.g. October affiliate payout">
+    <div class="msg" id="revMsg"></div>
+    <button id="addRevenueBtn">Add Revenue Entry</button>
+  </div>
+
+  <div class="card">
+    <h2>Allocate revenue to Reward Pool</h2>
+    <label>Amount to allocate (PKR)</label>
+    <input id="allocAmount" type="number" min="1">
+    <label>Note (optional)</label>
+    <input id="allocNote" placeholder="e.g. From October subscription revenue">
+    <div class="msg" id="allocMsg"></div>
+    <button id="allocateBtn">Allocate to Pool</button>
+  </div>
+
+  <div class="card">
+    <h2>Low-pool pause threshold</h2>
+    <label>Pause mining rewards when pool falls below (PKR)</label>
+    <input id="thresholdInput" type="number" min="0">
+    <div class="msg" id="thresholdMsg"></div>
+    <button id="saveThresholdBtn">Save Threshold</button>
+  </div>
+
+  <div class="card">
+    <h2>Recent pool allocations</h2>
+    <div class="list" id="allocList"><div class="empty">Loading...</div></div>
+  </div>
+
+  <div class="note">Reward Pool funds must come from real, legitimate platform revenue (subscriptions, affiliate, campaigns, service fees) — never from user deposits. The system will refuse to approve a mining reward larger than the remaining pool balance.</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script>
+  function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK'); }
+  let adminUid = null;
+
+  async function refreshPauseFlag(newBalance) {
+    const settingsDoc = await db.collection(COL.settings).doc('mining').get();
+    const threshold = (settingsDoc.exists && settingsDoc.data().lowPoolThreshold) || 0;
+    const paused = newBalance < threshold;
+    await db.collection(COL.settings).doc('mining').set({ rewardsPaused: paused }, { merge: true });
+    return paused;
+  }
+
+  document.getElementById('addRevenueBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('revMsg');
+    const amount = parseFloat(document.getElementById('revAmount').value);
+    const source = document.getElementById('revSource').value;
+    const description = document.getElementById('revDesc').value.trim();
+    if (!amount || amount <= 0) { msg.textContent = 'Enter a valid amount.'; msg.className = 'msg err'; return; }
+
+    const btn = document.getElementById('addRevenueBtn');
+    btn.disabled = true;
+    try {
+      await db.collection('earnnova_platform_revenue').add({
+        source, amount, description: description || null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: adminUid
+      });
+      msg.textContent = 'Revenue entry logged.';
+      msg.className = 'msg ok';
+      document.getElementById('revAmount').value = '';
+      document.getElementById('revDesc').value = '';
+      loadAll();
+    } catch (err) {
+      console.error(err);
+      msg.textContent = 'Ooh, that hit an iceberg 🧊 — give it another try!';
+      msg.className = 'msg err';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('allocateBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('allocMsg');
+    const amount = parseFloat(document.getElementById('allocAmount').value);
+    const note = document.getElementById('allocNote').value.trim();
+    if (!amount || amount <= 0) { msg.textContent = 'Enter a valid amount.'; msg.className = 'msg err'; return; }
+
+    const btn = document.getElementById('allocateBtn');
+    btn.disabled = true;
+    try {
+      const poolRef = db.collection('earnnova_reward_pool').doc('main');
+      const poolDoc = await poolRef.get();
+      const p = poolDoc.exists ? poolDoc.data() : { balance: 0, totalAllocated: 0, totalCredited: 0 };
+      const newBalance = (p.balance || 0) + amount;
+      const newTotalAllocated = (p.totalAllocated || 0) + amount;
+
+      await poolRef.set({
+        balance: newBalance, totalAllocated: newTotalAllocated, totalCredited: p.totalCredited || 0,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      await db.collection('earnnova_reward_pool_allocations').add({
+        amount, note: note || null, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: adminUid
+      });
+
+      await refreshPauseFlag(newBalance);
+
+      msg.textContent = `Allocated ${fmt(amount)} to the Reward Pool.`;
+      msg.className = 'msg ok';
+      document.getElementById('allocAmount').value = '';
+      document.getElementById('allocNote').value = '';
+      loadAll();
+    } catch (err) {
+      console.error(err);
+      msg.textContent = 'Ooh, that hit an iceberg 🧊 — give it another try!';
+      msg.className = 'msg err';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('saveThresholdBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('thresholdMsg');
+    const threshold = parseFloat(document.getElementById('thresholdInput').value) || 0;
+    const btn = document.getElementById('saveThresholdBtn');
+    btn.disabled = true;
+    try {
+      await db.collection(COL.settings).doc('mining').set({ lowPoolThreshold: threshold }, { merge: true });
+      const poolDoc = await db.collection('earnnova_reward_pool').doc('main').get();
+      const balance = poolDoc.exists ? (poolDoc.data().balance || 0) : 0;
+      await refreshPauseFlag(balance);
+      msg.textContent = 'Threshold saved.';
+      msg.className = 'msg ok';
+      loadAll();
+    } catch (err) {
+      console.error(err);
+      msg.textContent = 'Ooh, that hit an iceberg 🧊 — give it another try!';
+      msg.className = 'msg err';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  async function loadAll() {
+    try {
+      const [poolDoc, revenueSnap, allocSnap, withdrawSnap, settingsDoc] = await Promise.all([
+        db.collection('earnnova_reward_pool').doc('main').get(),
+        db.collection('earnnova_platform_revenue').get(),
+        db.collection('earnnova_reward_pool_allocations').orderBy('createdAt', 'desc').limit(20).get(),
+        db.collection(COL.transactions).where('type', '==', 'Withdrawal').where('status', '==', 'Approved').get(),
+        db.collection(COL.settings).doc('mining').get()
+      ]);
+
+      const pool = poolDoc.exists ? poolDoc.data() : { balance: 0, totalAllocated: 0, totalCredited: 0 };
+      document.getElementById('poolBalance').textContent = fmt(pool.balance);
+      document.getElementById('totalAllocated').textContent = fmt(pool.totalAllocated);
+      document.getElementById('totalCredited').textContent = fmt(pool.totalCredited);
+
+      const threshold = (settingsDoc.exists && settingsDoc.data().lowPoolThreshold) || 0;
+      document.getElementById('thresholdInput').value = threshold;
+      const isPaused = settingsDoc.exists && settingsDoc.data().rewardsPaused;
+      document.getElementById('heroCard').className = 'hero-card' + (isPaused ? ' low' : '');
+      document.getElementById('pauseNote').style.display = isPaused ? 'block' : 'none';
+
+      let totalRevenue = 0;
+      const bySource = {};
+      revenueSnap.forEach(doc => {
+        const r = doc.data();
+        totalRevenue += (r.amount || 0);
+        bySource[r.source] = (bySource[r.source] || 0) + (r.amount || 0);
+      });
+      document.getElementById('totalRevenue').textContent = fmt(totalRevenue);
+
+      const revBox = document.getElementById('revenueBreakdown');
+      const sources = ['Subscription', 'Affiliate', 'Sponsored Campaign', 'Platform Service'];
+      revBox.innerHTML = sources.map(s => `<div class="rev-row"><span>${s}</span><span class="v">${fmt(bySource[s] || 0)}</span></div>`).join('');
+
+      let totalWithdrawn = 0;
+      withdrawSnap.forEach(doc => totalWithdrawn += (doc.data().amount || 0));
+      document.getElementById('totalWithdrawn').textContent = fmt(totalWithdrawn);
+
+      const allocList = document.getElementById('allocList');
+      if (allocSnap.empty) {
+        allocList.innerHTML = '<div class="empty">No allocations yet.</div>';
+      } else {
+        allocList.innerHTML = '';
+        allocSnap.forEach(doc => {
+          const a = doc.data();
+          const dateStr = a.createdAt ? a.createdAt.toDate().toLocaleString('en-PK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+          const item = document.createElement('div');
+          item.className = 'item';
+          item.innerHTML = `<div class="top"><span>${a.note || 'Allocation'}</span><span class="amt">+${fmt(a.amount)}</span></div><div class="sub">${dateStr}</div>`;
+          allocList.appendChild(item);
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  requireAdmin((user) => {
+    adminUid = user.uid;
+    loadAll();
+  });
+</script>
+</body>
+</html>
