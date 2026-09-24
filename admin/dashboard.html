@@ -137,17 +137,17 @@
 
   <div class="stat-grid">
     <div class="stat-card"><div class="label">Total Users</div><div class="value" id="totalUsers">—</div></div>
-    <div class="stat-card alert"><div class="label">Pending Deposits</div><div class="value" id="pendingDeposits">—</div></div>
-    <div class="stat-card alert"><div class="label">Pending Withdrawals</div><div class="value" id="pendingWithdrawals">—</div></div>
-    <div class="stat-card alert"><div class="label">Pending Mining Rewards</div><div class="value" id="pendingMining">—</div></div>
+    <div class="stat-card"><div class="label">Active Miners</div><div class="value" id="activeMiners">—</div></div>
+    <div class="stat-card"><div class="label">Today's Sessions</div><div class="value" id="todaysSessions">—</div></div>
+    <div class="stat-card"><div class="label">Reward Pool</div><div class="value" id="rewardPoolStat">—</div></div>
+    <div class="stat-card"><div class="label">Total Rewards Paid</div><div class="value" id="totalRewardsPaid">—</div></div>
+    <div class="stat-card"><div class="label">Total Withdrawals</div><div class="value" id="totalWithdrawalsPaid">—</div></div>
+    <div class="stat-card"><div class="label">Subscription Revenue</div><div class="value" id="subRevenue">—</div></div>
+    <div class="stat-card"><div class="label">Net Platform Revenue</div><div class="value" id="netRevenue">—</div></div>
   </div>
 
   <div class="section-head"><h2>MANAGE</h2></div>
   <div class="menu-list">
-    <a class="menu-item" href="deposits.html">
-      <div class="left"><div class="ic">💳</div><div class="title">Deposit Requests</div></div>
-      <div style="display:flex; align-items:center; gap:8px;"><span class="badge" id="depBadge" style="display:none;"></span><span class="arrow">›</span></div>
-    </a>
     <a class="menu-item" href="withdrawals.html">
       <div class="left"><div class="ic">📤</div><div class="title">Withdrawal Requests</div></div>
       <div style="display:flex; align-items:center; gap:8px;"><span class="badge" id="wdBadge" style="display:none;"></span><span class="arrow">›</span></div>
@@ -193,25 +193,52 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="../firebase-config.js"></script>
 <script>
+  function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK'); }
+
   requireAdmin(async () => {
     try {
-      const [usersSnap, depSnap, wdSnap, miningSnap, subSnap, ticketSnap] = await Promise.all([
+      const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+
+      const [usersSnap, wdSnap, miningPendingSnap, subSnap, ticketSnap, activeSessSnap,
+             allSessSnap, poolDoc, wdApprovedSnap, subTxSnap] = await Promise.all([
         db.collection(COL.users).get(),
-        db.collection(COL.deposits).where('status', '==', 'Pending Verification').get(),
         db.collection(COL.withdrawals).where('status', '==', 'Pending Review').get(),
         db.collection(COL.mining).where('status', 'in', ['Completed', 'Stopped']).get(),
         db.collection(COL.subscriptions).where('status', '==', 'Pending Verification').get(),
-        db.collection(COL.tickets).where('status', '==', 'Open').get()
+        db.collection(COL.tickets).where('status', '==', 'Open').get(),
+        db.collection(COL.mining).where('status', '==', 'Active').get(),
+        db.collection(COL.mining).get(),
+        db.collection('earnnova_reward_pool').doc('main').get(),
+        db.collection(COL.transactions).where('type', '==', 'Withdrawal').where('status', '==', 'Approved').get(),
+        db.collection(COL.transactions).where('type', '==', 'Subscription').where('status', '==', 'Approved').get()
       ]);
 
       document.getElementById('totalUsers').textContent = usersSnap.size;
-      document.getElementById('pendingDeposits').textContent = depSnap.size;
-      document.getElementById('pendingWithdrawals').textContent = wdSnap.size;
-      document.getElementById('pendingMining').textContent = miningSnap.size;
+      document.getElementById('activeMiners').textContent = activeSessSnap.size;
 
-      if (depSnap.size > 0) { const b = document.getElementById('depBadge'); b.textContent = depSnap.size; b.style.display = 'inline-block'; }
+      const todaysSessions = allSessSnap.docs.filter(d => {
+        const c = d.data().createdAt;
+        return c && c.toDate && c.toDate() >= startOfToday;
+      }).length;
+      document.getElementById('todaysSessions').textContent = todaysSessions;
+
+      const pool = poolDoc.exists ? poolDoc.data() : { balance: 0, totalCredited: 0 };
+      document.getElementById('rewardPoolStat').textContent = fmt(pool.balance);
+      document.getElementById('totalRewardsPaid').textContent = fmt(pool.totalCredited);
+
+      let totalWithdrawn = 0;
+      wdApprovedSnap.forEach(doc => totalWithdrawn += (doc.data().amount || 0));
+      document.getElementById('totalWithdrawalsPaid').textContent = fmt(totalWithdrawn);
+
+      let subRevenue = 0;
+      subTxSnap.forEach(doc => subRevenue += (doc.data().amount || 0));
+      document.getElementById('subRevenue').textContent = fmt(subRevenue);
+
+      const netRevenue = subRevenue - (pool.totalCredited || 0);
+      document.getElementById('netRevenue').textContent = fmt(netRevenue);
+
       if (wdSnap.size > 0) { const b = document.getElementById('wdBadge'); b.textContent = wdSnap.size; b.style.display = 'inline-block'; }
-      if (miningSnap.size > 0) { const b = document.getElementById('miningBadge'); b.textContent = miningSnap.size; b.style.display = 'inline-block'; }
+      if (miningPendingSnap.size > 0) { const b = document.getElementById('miningBadge'); b.textContent = miningPendingSnap.size; b.style.display = 'inline-block'; }
       if (subSnap.size > 0) { const b = document.getElementById('subBadge'); b.textContent = subSnap.size; b.style.display = 'inline-block'; }
       if (ticketSnap.size > 0) { const b = document.getElementById('ticketBadge'); b.textContent = ticketSnap.size; b.style.display = 'inline-block'; }
     } catch (err) {

@@ -178,9 +178,15 @@
     </div>
 
     <div class="card">
-      <h2>Mining Power</h2>
-      <label>Mining Power (applies to all users)</label>
+      <h2>Mining Power by tier</h2>
+      <label>Free Mining Power</label>
       <input id="miningPower" type="number" min="0">
+      <div class="row2">
+        <div><label>Starter Plan Power</label><input id="powerStarter" type="number" min="0"></div>
+        <div><label>Pro Plan Power</label><input id="powerPro" type="number" min="0"></div>
+      </div>
+      <label>Premium Plan Power</label>
+      <input id="powerPremium" type="number" min="0">
     </div>
 
     <div class="card">
@@ -194,11 +200,9 @@
     </div>
 
     <div class="card">
-      <h2>Deposit & Withdrawal Limits</h2>
-      <div class="row2">
-        <div><label>Minimum Deposit (PKR)</label><input id="minDeposit" type="number" min="1"></div>
-        <div><label>Minimum Withdrawal (PKR)</label><input id="minWithdrawal" type="number" min="1"></div>
-      </div>
+      <h2>Withdrawal Limit</h2>
+      <label>Minimum Withdrawal (PKR)</label>
+      <input id="minWithdrawal" type="number" min="1">
     </div>
 
     <button id="saveBtn">Save MineNova Settings</button>
@@ -241,12 +245,14 @@
     const btn = document.getElementById('saveBtn');
     msg.textContent = '';
 
-    const minDeposit = parseFloat(document.getElementById('minDeposit').value) || 500;
     const minWithdrawal = parseFloat(document.getElementById('minWithdrawal').value) || 500;
 
     const payload = {
       miningEnabled: document.getElementById('miningEnabled').checked,
       miningPower: parseFloat(document.getElementById('miningPower').value) || 0,
+      powerStarter: parseFloat(document.getElementById('powerStarter').value) || 0,
+      powerPro: parseFloat(document.getElementById('powerPro').value) || 0,
+      powerPremium: parseFloat(document.getElementById('powerPremium').value) || 0,
       rewardRate: parseFloat(document.getElementById('rewardRate').value) || 0,
       sessionDurationMinutes: parseInt(document.getElementById('sessionDuration').value) || 60,
       maxSessionsPerDay: parseInt(document.getElementById('maxSessions').value) || 3
@@ -255,7 +261,6 @@
     btn.disabled = true;
     try {
       await db.collection(COL.settings).doc('mining').set(payload, { merge: true });
-      await db.collection(COL.settings).doc('deposit').set({ minDeposit }, { merge: true });
       await db.collection(COL.settings).doc('withdrawal').set({ minWithdrawal }, { merge: true });
       msg.textContent = 'MineNova settings saved.';
       msg.className = 'msg ok';
@@ -414,13 +419,13 @@
       const settingsDoc = await db.collection(COL.settings).doc('mining').get();
       const s = settingsDoc.exists ? settingsDoc.data() : {};
       document.getElementById('miningEnabled').checked = s.miningEnabled !== false;
-      document.getElementById('miningPower').value = s.miningPower ?? 10;
+      document.getElementById('miningPower').value = s.miningPower ?? 2;
+      document.getElementById('powerStarter').value = s.powerStarter ?? 5;
+      document.getElementById('powerPro').value = s.powerPro ?? 10;
+      document.getElementById('powerPremium').value = s.powerPremium ?? 20;
       document.getElementById('rewardRate').value = s.rewardRate ?? 5;
       document.getElementById('sessionDuration').value = s.sessionDurationMinutes ?? 60;
       document.getElementById('maxSessions').value = s.maxSessionsPerDay ?? 3;
-
-      const depDoc = await db.collection(COL.settings).doc('deposit').get();
-      document.getElementById('minDeposit').value = (depDoc.exists && depDoc.data().minDeposit) || 500;
 
       const wdDoc = await db.collection(COL.settings).doc('withdrawal').get();
       document.getElementById('minWithdrawal').value = (wdDoc.exists && wdDoc.data().minWithdrawal) || 500;
