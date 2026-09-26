@@ -181,13 +181,25 @@
 
   <div class="plans" id="plansList">
     <div class="plan">
+      <div class="plan-top"><div class="name">🆓 Free</div></div>
+      <div class="price">PKR 0 <span>/ forever</span></div>
+      <ul>
+        <li>⛏️ Mining Power: 2</li>
+        <li>🎬 Ad Unlocks: 3/day</li>
+        <li>Basic mining history</li>
+        <li>Daily check-in</li>
+      </ul>
+      <div class="plan-btn active-badge">Current Default</div>
+    </div>
+
+    <div class="plan">
       <div class="plan-top"><div class="name">🥉 Starter</div></div>
       <div class="price">PKR 299 <span>/ month</span></div>
       <ul>
         <li>⛏️ Mining Power: 5</li>
-        <li>Standard reward rate</li>
-        <li>Basic support</li>
-        <li>Wallet access</li>
+        <li>🎬 Ad Unlocks: 5/day</li>
+        <li>Advanced analytics</li>
+        <li>Premium badge</li>
       </ul>
       <div class="plan-btn" data-plan="Starter" data-price="299">Activate Plan</div>
     </div>
@@ -197,9 +209,9 @@
       <div class="price">PKR 699 <span>/ month</span></div>
       <ul>
         <li>⛏️ Mining Power: 10</li>
-        <li>Higher daily session limits</li>
+        <li>🎬 Ad Unlocks: 8/day</li>
         <li>Priority support</li>
-        <li>Advanced mining dashboard</li>
+        <li>Exclusive events</li>
       </ul>
       <div class="plan-btn" data-plan="Pro" data-price="699">Activate Plan</div>
     </div>
@@ -209,15 +221,16 @@
       <div class="price">PKR 1,499 <span>/ month</span></div>
       <ul>
         <li>⛏️ Mining Power: 20</li>
-        <li>Maximum session limits</li>
-        <li>Priority mining reward review</li>
-        <li>Priority support</li>
+        <li>🎬 Ad Unlocks: 12/day</li>
+        <li>Full analytics + priority support</li>
+        <li>Premium badge</li>
       </ul>
       <div class="plan-btn" data-plan="Premium" data-price="1499">Activate Plan</div>
     </div>
   </div>
 
-  <div class="trust-note">Your earnings depend on available opportunities, session completion, approval, and applicable platform rules. Subscriptions are not an investment and do not guarantee income.</div>
+  <div class="trust-note">Premium subscriptions provide additional platform features and higher usage limits. Rewards are subject to MineNova's reward allocation, eligibility rules and available reward pool. Subscriptions are not an investment and do not guarantee income.</div>
+  <div class="trust-note" style="margin-top:10px;">MineNova is a virtual/platform rewards system — not real cryptocurrency mining. <a href="support.html" style="color:var(--indigo-soft);">Reward Rules</a> · <a href="support.html" style="color:var(--indigo-soft);">Subscription Rules</a> · <a href="support.html" style="color:var(--indigo-soft);">Terms</a></div>
 
 </div>
 
@@ -337,12 +350,13 @@
 
       const currentCard = document.getElementById('currentCard');
       if (active) {
+        const startedStr = active.startedAt ? active.startedAt.toDate().toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
         const expiresStr = active.expiresAt ? new Date(active.expiresAt).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-        currentCard.innerHTML = `Current plan: <b>${active.planName}</b> — active until <b>${expiresStr}</b>`;
+        currentCard.innerHTML = `💎 Current plan: <b>${active.planName}</b> · Status: <b style="color:var(--teal);">ACTIVE</b><br>Started <b>${startedStr}</b> — expires <b>${expiresStr}</b>`;
       } else if (pending) {
         currentCard.innerHTML = `Your <b>${pending.planName}</b> plan payment is <b>under review</b>.`;
       } else {
-        currentCard.innerHTML = `You don't have an active subscription yet.`;
+        currentCard.innerHTML = `💎 Current plan: <b>Free</b> — upgrade below for more Mining Power and daily ad unlocks.`;
       }
 
       document.querySelectorAll('.plan-btn').forEach(btn => {

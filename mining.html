@@ -205,7 +205,19 @@
 
 <div class="wrap">
 
-  <div class="rig-card">
+  <div class="card" id="adUnlockCard" style="text-align:center;">
+    <div style="font-size:13px; color:var(--muted); font-weight:600;">🎬 Watch Ad to Unlock Mining</div>
+    <div style="display:flex; justify-content:space-around; margin-top:12px; font-size:11px;">
+      <div><div style="font-family:'Sora'; font-weight:700; font-size:16px;" id="adsWatchedToday">0</div><div style="color:var(--muted); margin-top:2px;">Watched Today</div></div>
+      <div><div style="font-family:'Sora'; font-weight:700; font-size:16px;" id="adUnlocksRemaining">0</div><div style="color:var(--muted); margin-top:2px;">Remaining</div></div>
+      <div><div style="font-family:'Sora'; font-weight:700; font-size:16px; color:var(--teal);" id="sessionsUnlocked">0</div><div style="color:var(--muted); margin-top:2px;">Unlocked</div></div>
+    </div>
+    <button id="watchAdBtn" style="width:100%; margin-top:14px; padding:12px; border:none; border-radius:12px; font-weight:600; font-size:14px; background:linear-gradient(135deg, #F5B95B, #E08A2B); color:#1A1206; cursor:pointer;">▶️ Watch Ad</button>
+    <div id="noAdNote" style="display:none; margin-top:10px; font-size:12px; color:var(--muted);">No rewarded ad is available right now. Please try again later.</div>
+    <div id="adsDisabledNote" style="display:none; margin-top:10px; font-size:12px; color:var(--danger);">Rewarded ads are currently disabled by the platform.</div>
+  </div>
+
+  <div class="rig-card" style="margin-top:14px;">
     <div class="rig-icon" id="rigIcon">⛏️</div>
     <div class="ring-wrap">
       <svg viewBox="0 0 170 170">
@@ -228,6 +240,17 @@
 
     <button class="mine-btn start" id="mineBtn">Start Mining</button>
     <div class="disabled-note" id="disabledNote" style="display:none;">Mining is currently disabled by the platform.</div>
+    <div class="disabled-note" id="lockedNote" style="display:none;">⚡ Watch an ad above to unlock a mining session.</div>
+  </div>
+
+  <div class="modal-overlay" id="adModalOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.75); display:none; align-items:center; justify-content:center; z-index:200;">
+    <div style="background:#0F1530; border:1px solid var(--surface-border); border-radius:20px; padding:28px 24px; max-width:340px; width:88%; text-align:center;">
+      <div style="font-size:40px;">🎬</div>
+      <div style="font-weight:700; margin-top:10px;">Watching ad…</div>
+      <div style="color:var(--muted); font-size:12.5px; margin-top:6px;">Please wait for the ad to finish</div>
+      <div style="font-family:'Sora'; font-size:32px; font-weight:800; margin-top:16px;" id="adCountdown">15</div>
+      <button id="claimAdBtn" disabled style="width:100%; margin-top:18px; padding:12px; border:none; border-radius:12px; font-weight:600; background:linear-gradient(135deg, var(--indigo), #4756D8); color:#fff; opacity:0.5;">Claim Reward</button>
+    </div>
   </div>
 
   <div class="bal-card" style="margin-top:14px; padding:18px; border-radius:18px; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, rgba(91,110,245,0.18), rgba(91,110,245,0.05)); border:1px solid rgba(91,110,245,0.3);">
@@ -305,8 +328,13 @@
   function fmt(n) { return 'PKR ' + Number(n || 0).toLocaleString('en-PK', { maximumFractionDigits: 2 }); }
 
   let currentUser = null;
-  let miningSettings = { miningEnabled: true, miningPower: 2, powerStarter: 5, powerPro: 10, powerPremium: 20, rewardRate: 5, sessionDurationMinutes: 60, maxSessionsPerDay: 3 };
+  let miningSettings = { miningEnabled: true, miningPower: 2, powerStarter: 5, powerPro: 10, powerPremium: 20, rewardRate: 5, sessionDurationMinutes: 60, maxSessionsPerDay: 3, adsEnabled: true, adUnlocksFree: 3, adUnlocksStarter: 5, adUnlocksPro: 8, adUnlocksPremium: 12 };
   let miningPower = 10;
+  let currentPlanName = 'Free';
+  let adUnlockCap = 3;
+  let unlockCreditsAvailable = 0;
+  let currentAdWatchId = null;
+  let adCountdownInterval = null;
   let activeSession = null; // { id, plannedEndSeconds, startedAtMs }
   let timerInterval = null;
   const RING_CIRC = 477.5;
@@ -382,7 +410,136 @@
     activeSession = null;
     updateSessionUI(false);
     loadEverything();
+    refreshAdUnlockUI();
   }
+
+  // ---- Rewarded ad unlock flow ----
+  async function refreshAdUnlockUI() {
+    try {
+      const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+
+      if (!miningSettings.adsEnabled) {
+        document.getElementById('adUnlockCard').style.display = 'none';
+        return;
+      }
+      document.getElementById('adUnlockCard').style.display = 'block';
+
+      const adCapByPlan = {
+        'Free': miningSettings.adUnlocksFree, 'Starter': miningSettings.adUnlocksStarter,
+        'Pro': miningSettings.adUnlocksPro, 'Premium': miningSettings.adUnlocksPremium
+      };
+      adUnlockCap = adCapByPlan[currentPlanName] ?? miningSettings.adUnlocksFree;
+
+      let watchedToday = 0;
+      try {
+        const watchSnap = await db.collection('earnnova_ad_watches')
+          .where('userId', '==', currentUser.uid).where('status', '==', 'Completed')
+          .where('createdAt', '>=', startOfToday).get();
+        watchedToday = watchSnap.size;
+      } catch (err) {
+        const allWatchSnap = await db.collection('earnnova_ad_watches').where('userId', '==', currentUser.uid).where('status', '==', 'Completed').get();
+        watchedToday = allWatchSnap.docs.filter(d => { const c = d.data().createdAt; return c && c.toDate && c.toDate() >= startOfToday; }).length;
+      }
+
+      let sessionsCreatedToday = 0;
+      try {
+        const sessSnap2 = await db.collection(COL.mining)
+          .where('userId', '==', currentUser.uid).where('createdAt', '>=', startOfToday).get();
+        sessionsCreatedToday = sessSnap2.size;
+      } catch (err) {
+        const allSessSnap = await db.collection(COL.mining).where('userId', '==', currentUser.uid).get();
+        sessionsCreatedToday = allSessSnap.docs.filter(d => { const c = d.data().createdAt; return c && c.toDate && c.toDate() >= startOfToday; }).length;
+      }
+
+      unlockCreditsAvailable = Math.max(0, watchedToday - sessionsCreatedToday);
+
+      document.getElementById('adsWatchedToday').textContent = watchedToday;
+      document.getElementById('adUnlocksRemaining').textContent = Math.max(0, adUnlockCap - watchedToday);
+      document.getElementById('sessionsUnlocked').textContent = unlockCreditsAvailable;
+
+      const watchBtn = document.getElementById('watchAdBtn');
+      if (watchedToday >= adUnlockCap) {
+        watchBtn.disabled = true;
+        watchBtn.style.opacity = '0.5';
+        document.getElementById('noAdNote').style.display = 'block';
+      } else {
+        watchBtn.disabled = false;
+        watchBtn.style.opacity = '1';
+        document.getElementById('noAdNote').style.display = 'none';
+      }
+
+      // Gate the Start Mining button on having an unused unlock (only while idle)
+      if (!activeSession) {
+        const lockedNote = document.getElementById('lockedNote');
+        const mineBtn = document.getElementById('mineBtn');
+        if (unlockCreditsAvailable <= 0) {
+          mineBtn.disabled = true;
+          mineBtn.style.opacity = '0.5';
+          lockedNote.style.display = 'block';
+        } else {
+          mineBtn.disabled = false;
+          mineBtn.style.opacity = '1';
+          lockedNote.style.display = 'none';
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  document.getElementById('watchAdBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('watchAdBtn');
+    btn.disabled = true;
+    try {
+      const ref = await db.collection('earnnova_ad_watches').add({
+        userId: currentUser.uid, status: 'Watching', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      currentAdWatchId = ref.id;
+
+      document.getElementById('adModalOverlay').style.display = 'flex';
+      const claimBtn = document.getElementById('claimAdBtn');
+      const countdownEl = document.getElementById('adCountdown');
+      claimBtn.disabled = true;
+      claimBtn.style.opacity = '0.5';
+      let remaining = 15;
+      countdownEl.textContent = remaining;
+      clearInterval(adCountdownInterval);
+      adCountdownInterval = setInterval(() => {
+        remaining--;
+        countdownEl.textContent = Math.max(0, remaining);
+        if (remaining <= 0) {
+          clearInterval(adCountdownInterval);
+          claimBtn.disabled = false;
+          claimBtn.style.opacity = '1';
+          countdownEl.textContent = 'Done ✓';
+        }
+      }, 1000);
+    } catch (err) {
+      console.error(err);
+      alert('Ooh, that hit an iceberg 🧊 — give it another try!');
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('claimAdBtn').addEventListener('click', async () => {
+    const claimBtn = document.getElementById('claimAdBtn');
+    claimBtn.disabled = true;
+    claimBtn.textContent = 'Claiming...';
+    try {
+      await db.collection('earnnova_ad_watches').doc(currentAdWatchId).update({
+        status: 'Completed', completedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      document.getElementById('adModalOverlay').style.display = 'none';
+      claimBtn.textContent = 'Claim Reward';
+      currentAdWatchId = null;
+      await refreshAdUnlockUI();
+    } catch (err) {
+      console.error(err);
+      alert('That ad watch could not be verified — please try watching again.');
+      claimBtn.disabled = false;
+      claimBtn.textContent = 'Claim Reward';
+    }
+  });
 
   document.getElementById('mineBtn').addEventListener('click', async () => {
     const btn = document.getElementById('mineBtn');
@@ -407,9 +564,22 @@
         activeSession = null;
         updateSessionUI(false);
         loadEverything();
+        refreshAdUnlockUI();
       } else {
         // START — guard against duplicate/overlapping sessions
         if (!miningSettings.miningEnabled) { alert('Mining is currently disabled by the platform.'); btn.disabled = false; return; }
+
+        // Ad-unlock gate: when ads are enabled, every session must be backed by an unused
+        // completed ad watch from today (re-checked live, not just from cached UI state).
+        if (miningSettings.adsEnabled) {
+          await refreshAdUnlockUI();
+          if (unlockCreditsAvailable <= 0) {
+            alert('Watch an ad to unlock a mining session first.');
+            btn.disabled = false;
+            btn.textContent = 'Start Mining';
+            return;
+          }
+        }
 
         btn.textContent = 'Checking...';
 
@@ -431,31 +601,34 @@
           return;
         }
 
-        // 2) Enforce the daily session cap
-        const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
-        let todayCount = 0;
-        try {
-          const todaySnap = await db.collection(COL.mining)
-            .where('userId', '==', currentUser.uid)
-            .where('createdAt', '>=', startOfToday)
-            .get();
-          todayCount = todaySnap.size;
-        } catch (err) {
-          // Composite index not ready yet — fall back to a plain query and filter client-side
-          console.warn('Falling back to client-side date filter for daily cap check', err.message);
-          const allSnap = await db.collection(COL.mining).where('userId', '==', currentUser.uid).get();
-          todayCount = allSnap.docs.filter(d => {
-            const c = d.data().createdAt;
-            return c && c.toDate && c.toDate() >= startOfToday;
-          }).length;
-        }
-        const cap = miningSettings.maxSessionsPerDay || 1;
-        if (todayCount >= cap) {
-          alert(`You've reached today's mining limit (${cap} session${cap > 1 ? 's' : ''}). Come back tomorrow!`);
-          btn.disabled = false;
-          btn.textContent = 'Start Mining';
-          refreshDailyLimitUI();
-          return;
+        // 2) Enforce the daily session cap — only the legacy flat cap when ads are OFF;
+        // when ads are ON, the ad-unlock check above already governs how many sessions/day.
+        if (!miningSettings.adsEnabled) {
+          const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+          let todayCount = 0;
+          try {
+            const todaySnap = await db.collection(COL.mining)
+              .where('userId', '==', currentUser.uid)
+              .where('createdAt', '>=', startOfToday)
+              .get();
+            todayCount = todaySnap.size;
+          } catch (err) {
+            // Composite index not ready yet — fall back to a plain query and filter client-side
+            console.warn('Falling back to client-side date filter for daily cap check', err.message);
+            const allSnap = await db.collection(COL.mining).where('userId', '==', currentUser.uid).get();
+            todayCount = allSnap.docs.filter(d => {
+              const c = d.data().createdAt;
+              return c && c.toDate && c.toDate() >= startOfToday;
+            }).length;
+          }
+          const cap = miningSettings.maxSessionsPerDay || 1;
+          if (todayCount >= cap) {
+            alert(`You've reached today's mining limit (${cap} session${cap > 1 ? 's' : ''}). Come back tomorrow!`);
+            btn.disabled = false;
+            btn.textContent = 'Start Mining';
+            refreshDailyLimitUI();
+            return;
+          }
         }
 
         const durationMinutes = miningSettings.sessionDurationMinutes;
@@ -670,7 +843,7 @@
 
       // Mining Power is platform-controlled and tier-based on the user's active plan —
       // not user-editable or deposit-linked.
-      let currentPlanName = 'Free';
+      currentPlanName = 'Free';
       try {
         const subQuery = await db.collection(COL.subscriptions)
           .where('userId', '==', user.uid).where('status', '==', 'Active').limit(1).get();
@@ -701,6 +874,7 @@
 
       await loadEverything();
       refreshDailyLimitUI();
+      refreshAdUnlockUI();
     } catch (err) {
       console.error(err);
     }

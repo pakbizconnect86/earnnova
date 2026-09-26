@@ -162,6 +162,7 @@
     <label>Source</label>
     <select id="revSource">
       <option>Subscription</option>
+      <option>Advertising</option>
       <option>Affiliate</option>
       <option>Sponsored Campaign</option>
       <option>Platform Service</option>
@@ -338,7 +339,7 @@
       document.getElementById('totalRevenue').textContent = fmt(totalRevenue);
 
       const revBox = document.getElementById('revenueBreakdown');
-      const sources = ['Subscription', 'Affiliate', 'Sponsored Campaign', 'Platform Service'];
+      const sources = ['Subscription', 'Advertising', 'Affiliate', 'Sponsored Campaign', 'Platform Service'];
       revBox.innerHTML = sources.map(s => `<div class="rev-row"><span>${s}</span><span class="v">${fmt(bySource[s] || 0)}</span></div>`).join('');
 
       let totalWithdrawn = 0;

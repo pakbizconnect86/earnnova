@@ -288,5 +288,21 @@ service cloud.firestore {
          request.resource.data.userId == request.auth.uid);
       allow delete: if false;
     }
+
+    // ---- Rewarded ad unlocks (server-verified minimum watch duration) ----
+    match /earnnova_ad_watches/{id} {
+      allow read: if enIsSignedIn() && (resource.data.userId == request.auth.uid || enIsAdmin());
+      allow create: if enIsSignedIn() && request.resource.data.userId == request.auth.uid
+                     && request.resource.data.status == 'Watching';
+      // A watch can only be marked Completed by its owner once at least 15 real seconds
+      // have passed since it was created server-side — this is what stops instant/fake claims.
+      allow update: if enIsAdmin() ||
+        (enIsSignedIn() && resource.data.userId == request.auth.uid &&
+         resource.data.status == 'Watching' &&
+         request.resource.data.status == 'Completed' &&
+         request.resource.data.userId == request.auth.uid &&
+         request.time >= resource.data.startedAt + duration.value(15, 's'));
+      allow delete: if false;
+    }
   }
 }
