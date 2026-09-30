@@ -60,6 +60,11 @@
   .msg.ok{color:var(--teal);}
   .msg.err{color:var(--danger);}
 
+  .revenue-breakdown{display:flex; flex-direction:column; gap:8px;}
+  .rev-row{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--surface-border); font-size:13px;}
+  .rev-row:last-child{border-bottom:none;}
+  .rev-row .v{font-weight:700; color:var(--teal);}
+
   .list{display:flex; flex-direction:column; gap:10px;}
   .item{background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius); padding:16px;}
   .item-top{display:flex; justify-content:space-between; align-items:flex-start;}
@@ -201,14 +206,32 @@
 
     <div class="card">
       <div class="toggle-row">
-        <h2 style="margin:0;">Rewarded Ads Enabled</h2>
+        <h2 style="margin:0;">Show Ad Unlock Card</h2>
         <label class="switch">
           <input type="checkbox" id="adsEnabled">
           <span class="slider"></span>
         </label>
       </div>
-      <label>Ad provider (reference only, e.g. AdMob unit ID)</label>
-      <input id="adProvider" placeholder="Not connected yet">
+      <div class="toggle-row" style="margin-top:14px;">
+        <h2 style="margin:0;">Require Rewarded Ad to Mine</h2>
+        <label class="switch">
+          <input type="checkbox" id="rewardedAdsEnabled">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div style="font-size:11px; color:var(--muted); margin-top:6px;">When OFF, mining stays completely free (no ad required) — the daily fallback cap below applies instead.</div>
+
+      <label>Ad Provider</label>
+      <select id="adProvider">
+        <option value="">None connected — shows "No rewarded ad is currently available."</option>
+      </select>
+      <div style="font-size:11px; color:var(--muted); margin-top:6px;">No rewarded-ad provider is wired up yet. Connecting one (e.g. a provider with real web rewarded-video + server-side verification) requires adding its SDK and a trusted backend verifier — ask me when you're ready to do that.</div>
+
+      <div class="row2">
+        <div><label>Daily Ad Request Limit (global)</label><input id="dailyAdLimit" type="number" min="1"></div>
+        <div><label>Cooldown Between Ads (seconds)</label><input id="adCooldownSeconds" type="number" min="0"></div>
+      </div>
+
       <label>Daily Ad Unlocks by tier — each unlock = 1 mining session</label>
       <div class="row2">
         <div><label>Free</label><input id="adUnlocksFree" type="number" min="0"></div>
@@ -217,6 +240,11 @@
       <div class="row2">
         <div><label>Pro</label><input id="adUnlocksPro" type="number" min="0"></div>
         <div><label>Premium</label><input id="adUnlocksPremium" type="number" min="0"></div>
+      </div>
+
+      <div class="revenue-breakdown" style="margin-top:14px;">
+        <div class="rev-row"><span>Ad Sessions Completed (verified)</span><span class="v" id="adSessionsCompletedStat">—</span></div>
+        <div class="rev-row"><span>Advertising Revenue Logged</span><span class="v" id="adRevenueStat">—</span></div>
       </div>
     </div>
 
@@ -278,7 +306,10 @@
       sessionDurationMinutes: parseInt(document.getElementById('sessionDuration').value) || 60,
       maxSessionsPerDay: parseInt(document.getElementById('maxSessions').value) || 3,
       adsEnabled: document.getElementById('adsEnabled').checked,
-      adProvider: document.getElementById('adProvider').value.trim() || null,
+      rewardedAdsEnabled: document.getElementById('rewardedAdsEnabled').checked,
+      adProvider: document.getElementById('adProvider').value || null,
+      dailyAdLimit: parseInt(document.getElementById('dailyAdLimit').value) || 20,
+      adCooldownSeconds: parseInt(document.getElementById('adCooldownSeconds').value) || 30,
       adUnlocksFree: parseInt(document.getElementById('adUnlocksFree').value) || 0,
       adUnlocksStarter: parseInt(document.getElementById('adUnlocksStarter').value) || 0,
       adUnlocksPro: parseInt(document.getElementById('adUnlocksPro').value) || 0,
@@ -454,7 +485,10 @@
       document.getElementById('sessionDuration').value = s.sessionDurationMinutes ?? 60;
       document.getElementById('maxSessions').value = s.maxSessionsPerDay ?? 3;
       document.getElementById('adsEnabled').checked = s.adsEnabled !== false;
+      document.getElementById('rewardedAdsEnabled').checked = s.rewardedAdsEnabled === true;
       document.getElementById('adProvider').value = s.adProvider || '';
+      document.getElementById('dailyAdLimit').value = s.dailyAdLimit ?? 20;
+      document.getElementById('adCooldownSeconds').value = s.adCooldownSeconds ?? 30;
       document.getElementById('adUnlocksFree').value = s.adUnlocksFree ?? 3;
       document.getElementById('adUnlocksStarter').value = s.adUnlocksStarter ?? 5;
       document.getElementById('adUnlocksPro').value = s.adUnlocksPro ?? 8;
@@ -462,6 +496,15 @@
 
       const wdDoc = await db.collection(COL.settings).doc('withdrawal').get();
       document.getElementById('minWithdrawal').value = (wdDoc.exists && wdDoc.data().minWithdrawal) || 500;
+
+      const [adSessSnap, adRevSnap] = await Promise.all([
+        db.collection('earnnova_ad_sessions').where('status', '==', 'Completed').where('verification', '==', 'ServerVerified').get(),
+        db.collection('earnnova_platform_revenue').where('source', '==', 'Advertising').get()
+      ]);
+      document.getElementById('adSessionsCompletedStat').textContent = adSessSnap.size;
+      let adRevenue = 0;
+      adRevSnap.forEach(doc => adRevenue += (doc.data().amount || 0));
+      document.getElementById('adRevenueStat').textContent = fmt(adRevenue);
 
       // Pending mining sessions (Completed or Stopped, awaiting review)
       const pendingSnap = await db.collection(COL.mining).where('status', 'in', ['Completed', 'Stopped']).get();

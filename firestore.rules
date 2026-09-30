@@ -277,10 +277,23 @@ service cloud.firestore {
     }
 
     // ---- Mining Center ----
+    function rewardedAdsRequired() {
+      return get(/databases/$(database)/documents/earnnova_settings/mining).data.rewardedAdsEnabled == true;
+    }
+    function adSessionVerifiedFor(id) {
+      return exists(/databases/$(database)/documents/earnnova_ad_sessions/$(id)) &&
+        get(/databases/$(database)/documents/earnnova_ad_sessions/$(id)).data.userId == request.auth.uid &&
+        get(/databases/$(database)/documents/earnnova_ad_sessions/$(id)).data.status == 'Completed' &&
+        get(/databases/$(database)/documents/earnnova_ad_sessions/$(id)).data.verification == 'ServerVerified';
+    }
     match /earnnova_mining_sessions/{id} {
       allow read: if enIsSignedIn() && (resource.data.userId == request.auth.uid || enIsAdmin());
+      // When rewarded ads are ON, a session may only be created against a doc id that matches
+      // a genuinely server-verified ad session for this same user — this is what stops the
+      // "Start Mining" button from ever working without a real, verified ad completion.
       allow create: if enIsSignedIn() && request.resource.data.userId == request.auth.uid
-                     && request.resource.data.status == 'Active';
+                     && request.resource.data.status == 'Active'
+                     && (!rewardedAdsRequired() || adSessionVerifiedFor(id));
       allow update: if enIsAdmin() ||
         (enIsSignedIn() && resource.data.userId == request.auth.uid &&
          resource.data.status == 'Active' &&
@@ -289,19 +302,16 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ---- Rewarded ad unlocks (server-verified minimum watch duration) ----
-    match /earnnova_ad_watches/{id} {
+    // ---- Rewarded ad sessions (real provider only) ----
+    // Completion/verification can NEVER be set by the client — only a trusted backend
+    // (using the Admin SDK, which bypasses these rules) or an admin may mark a session
+    // "Completed"/"ServerVerified". This is what stops fake/self-reported ad rewards.
+    match /earnnova_ad_sessions/{id} {
       allow read: if enIsSignedIn() && (resource.data.userId == request.auth.uid || enIsAdmin());
       allow create: if enIsSignedIn() && request.resource.data.userId == request.auth.uid
-                     && request.resource.data.status == 'Watching';
-      // A watch can only be marked Completed by its owner once at least 15 real seconds
-      // have passed since it was created server-side — this is what stops instant/fake claims.
-      allow update: if enIsAdmin() ||
-        (enIsSignedIn() && resource.data.userId == request.auth.uid &&
-         resource.data.status == 'Watching' &&
-         request.resource.data.status == 'Completed' &&
-         request.resource.data.userId == request.auth.uid &&
-         request.time >= resource.data.startedAt + duration.value(15, 's'));
+                     && request.resource.data.status == 'Requested'
+                     && request.resource.data.verification == 'Pending';
+      allow update: if enIsAdmin();
       allow delete: if false;
     }
   }
